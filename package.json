@@ -5,7 +5,8 @@
   "description": "Boky Fivavahana Anglikana",
   "scripts": {
     "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css app.js data www/",
-    "prepare": "npm run build:web"
+    "prepare": "npm run build:web",
+    "generate-logo": "npx @capacitor/assets generate --iconBackgroundColor '#003296' --splashBackgroundColor '#003296'"
   },
   "dependencies": {
     "@capacitor/android": "^5.7.8",
@@ -14,6 +15,7 @@
     "@capacitor/toast": "^5.0.8"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^5.7.8"
   }
 }
