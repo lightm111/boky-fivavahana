@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fivavahana</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <button id="menuBtn" onclick="toggleMenu()">☰</button>
+        <div id="headerTitle">Boky Fivavahana</div>
+        <button id="searchBtn" onclick="toggleGlobalSearch()">🔍</button>
+    </header>
+
+    <nav id="navMenu" class="nav-menu" style="display:none;">
+        <a href="#" onclick="navigateToBook('Litorjia Boky Fivavahana')">Litorjia</a>
+        <a href="#" onclick="navigateToBook('Fihirana')">Fihirana</a>
+        <a href="#" onclick="navigateToBook('H.A.A')">H.A.A</a>
+        <a href="#" onclick="navigateToBook('Salamo')">Salamo</a>
+        <a href="#" onclick="navigateToBook('Lalan\'ny Hazo Fijaliana')">Lalan'ny Hazo Fijaliana</a>
+        <a href="#" onclick="showAbout(); return false;">About</a>
+    </nav>
+
+    <div id="globalSearchContainer" class="search-dropdown" style="display:none;">
+        <input type="text" id="globalSearchField" placeholder="Hitady...">
+    </div>
+
+    <div id="sectionSearchContainer" style="display:none; padding: 0 16px;">
+        <input type="text" id="sectionSearchField" placeholder="Hitady..."
+            style="width:100%; padding:10px; box-sizing:border-box; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div id="content"></div>
+
+    <div class="zoom-buttons">
+        <button class="zoom-btn" id="zoomInBtn" onclick="zoomIn()" title="Increase font size">+</button>
+        <button class="zoom-btn" id="zoomOutBtn" onclick="zoomOut()" title="Decrease font size">−</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

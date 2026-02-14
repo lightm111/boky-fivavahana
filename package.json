@@ -1,0 +1,19 @@
+{
+  "name": "boky-fivavahana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Boky Fivavahana Anglikana",
+  "scripts": {
+    "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css app.js data www/",
+    "prepare": "npm run build:web"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/app": "^5.0.8",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/toast": "^5.0.8"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.7.8"
+  }
+}

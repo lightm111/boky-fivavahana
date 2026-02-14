@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "cat_name": "Litorjia Boky Fivavahana",
+    "cat_nbr_chapter": 19,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 2,
+    "cat_name": "Fihirana",
+    "cat_nbr_chapter": 77,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 3,
+    "cat_name": "H.A.A",
+    "cat_nbr_chapter": 0,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 4,
+    "cat_name": "Salamo",
+    "cat_nbr_chapter": 1,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 5,
+    "cat_name": "Lalan'ny Hazo Fijaliana",
+    "cat_nbr_chapter": 0,
+    "date_add": null,
+    "date_upd": null
+  }
+]
