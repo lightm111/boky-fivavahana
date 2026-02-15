@@ -11,6 +11,8 @@ let currentContentHtml = null; // Store original HTML content for zoom scaling
 let currentChapterId = null; // Track current chapter for prev/next navigation
 let currentTitleIndex = -1; // Track current title index for prev/next navigation
 let currentTitlesList = []; // Store current list of titles for prev/next navigation
+const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
+const numberedBooks = ["Fihirana", "H.A.A"];
 
 // Load saved font size on page load
 async function loadFontSize() {
@@ -46,7 +48,7 @@ function renderContent(htmlContent) {
     const container = document.getElementById("content");
     const scaledHtml = applyZoomToHtml(htmlContent, currentFontSize);
     container.innerHTML = `
-    <div class="item" style="cursor: default;">
+    <div id="lyrics">
       ${scaledHtml}
     </div>
   `;
@@ -281,7 +283,6 @@ function updateHeader(title) {
 }
 
 function goBack() {
-    console.log(navigationStack);
     currentContentHtml = null;
     const previous = navigationStack.pop();
     const g = document.getElementById("globalSearchField");
@@ -316,7 +317,7 @@ function showBooks() {
         div.innerText = book.cat_name;
         div.onclick = () => {
             navigationStack.push(showBooks);
-            showChapters(book.id);
+            numberedBooks.includes(book.cat_name) ? showPageSortedTitles(book.id) : showChapters(book.id);
         };
         container.appendChild(div);
     });
@@ -324,7 +325,6 @@ function showBooks() {
 
 function showChapters(bookId) {
     const book = books.find(b => b.id == bookId);
-    const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
     const showNumber = specialBooks.includes(book.cat_name);
 
     // reset to chapters view when entering a book
@@ -414,10 +414,9 @@ function showTitles(chapterId, showNumber = false) {
         });
 
     const book = books.find(b => b.id == chapter.book_id);
-    const specialBooks = ["Fihirana", "H.A.A"];
-    const isSpecial = book && specialBooks.includes(book.cat_name);
+    const isNumbered = book && numberedBooks.includes(book.cat_name);
 
-    if (isSpecial) renderSpecialToggle(book.id);
+    if (isNumbered) renderSpecialToggle(book.id);
 
 }
 
@@ -432,7 +431,7 @@ function showPageSortedTitles(bookId) {
     const sectionContainer = document.getElementById("sectionSearchContainer");
     const sectionField = document.getElementById("sectionSearchField");
     if (sectionContainer) sectionContainer.style.display = "block";
-    if (sectionField) sectionField.placeholder = `Search in ${book ? book.cat_name : "this book"}...`;
+    if (sectionField) sectionField.placeholder = `Hitady @${book ? book.cat_name : "this book"}...`;
 
     // get all titles for this book sorted by page number
     const allTitlesForBook = [];
@@ -442,23 +441,15 @@ function showPageSortedTitles(bookId) {
             titles
                 .filter(t => t.chapter_id == ch.id)
                 .forEach(t => {
-                    const content = contents.find(c => c.id_title == t.id);
                     allTitlesForBook.push({
                         title: t,
                         chapter: ch,
-                        pageNumber: content ? content.ct_page_number : 0
+                        pageNumber: t.number
                     });
                 });
         });
     // sort by page number ascending
     allTitlesForBook.sort((a, b) => (a.pageNumber || 0) - (b.pageNumber || 0));
-
-    // If this is Salamo, ignore stored page numbers and assign sequential numbers starting at 1
-    if (book && book.cat_name === "Salamo") {
-        allTitlesForBook.forEach((it, idx) => {
-            it.pageNumber = idx + 1;
-        });
-    }
 
     const container = document.getElementById("content");
     container.innerHTML = "";
@@ -488,7 +479,19 @@ function showPageSortedTitles(bookId) {
 
 function showAbout() {
     currentView = showAbout;
-    updateHeader("About");
+    updateHeader("Mombamomba");
+    if (navigationStack.length === 0) {
+        navigationStack = [showBooks];
+        updateFloatingBackButton();
+    }
+
+    const navMenu = document.getElementById("navMenu");
+    if (navMenu) navMenu.style.display = "none";
+
+    if (navOutsideHandler) {
+        document.removeEventListener("mousedown", navOutsideHandler);
+        navOutsideHandler = null;
+    }
 
     // hide section search and remove toggle button
     const sectionContainer = document.getElementById("sectionSearchContainer");
@@ -549,9 +552,27 @@ function showContent(titleId) {
     }
     const item = { ct_lyrics: combinedHtml };
 
-    // Track current chapter and title index for prev/next buttons
-    currentChapterId = titleObj.chapter_id;
-    currentTitlesList = titles.filter(t => t.chapter_id == titleObj.chapter_id);
+    // Track title index for prev/next buttons
+    // Determine book
+    const bookId = chapterObj.book_id;
+
+    // Build full ordered list of titles for the entire book
+    let bookTitles = [];
+
+    // Get all chapters of this book
+    const bookChapters = chapters
+        .filter(c => c.book_id == bookId)
+        .sort((a, b) => a.id - b.id); // keep natural order
+
+    // Collect all titles in chapter order
+    bookChapters.forEach(ch => {
+        const chapterTitles = titles
+            .filter(t => t.chapter_id == ch.id)
+            .sort((a, b) => (a.number || 0) - (b.number || 0));
+        bookTitles.push(...chapterTitles);
+    });
+
+    currentTitlesList = bookTitles;
     currentTitleIndex = currentTitlesList.findIndex(t => t.id == titleId);
 
     // Store original HTML for zoom scaling and render with current zoom
@@ -713,9 +734,6 @@ document.addEventListener("DOMContentLoaded", () => {
         let lastBackPress = 0;
 
         App.addListener("backButton", () => {
-
-            console.log("Back pressed");
-
             if (navigationStack.length > 0) {
                 goBack();
                 return;
@@ -732,7 +750,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 lastBackPress = now;
                 Toast.show({
-                    text: 'Press back again to exit'
+                    text: 'Tsindrio ihany raha hiala'
                 });
             }
         });

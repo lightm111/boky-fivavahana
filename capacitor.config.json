@@ -1,9 +1,15 @@
 {
   "appId": "com.uli.bokyfivavahana",
   "appName": "Boky Fivavahana",
+  "version": "1.1.0",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https"
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK"
+    }
   }
 }
