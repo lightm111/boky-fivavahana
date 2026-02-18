@@ -3,6 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2e4175">
     <title>Fivavahana</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -10,9 +12,7 @@
 <body>
 
     <header>
-        <button id="menuBtn" onclick="toggleMenu()">☰</button>
         <div id="headerTitle">Boky Fivavahana</div>
-        <button id="searchBtn" onclick="toggleGlobalSearch()">🔍</button>
     </header>
 
     <nav id="navMenu" class="nav-menu" style="display:none;">
@@ -34,11 +34,51 @@
     </div>
 
     <div id="content"></div>
-
     <div class="zoom-buttons">
         <button class="zoom-btn" id="zoomInBtn" onclick="zoomIn()" title="Increase font size">+</button>
         <button class="zoom-btn" id="zoomOutBtn" onclick="zoomOut()" title="Decrease font size">−</button>
     </div>
+
+
+    <nav id="bottomNav" class="bottom-nav">
+        <button class="bnav-btn" id="bnav-menu" onclick="toggleMenu()" title="Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            <span>Menu</span>
+        </button>
+        <button class="bnav-btn" id="bnav-prev" onclick="navigatePrev()" title="Previous" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+            </svg>
+            <span>Prev</span>
+        </button>
+        <button class="bnav-btn" id="bnav-next" onclick="navigateNext()" title="Next" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <span>Next</span>
+        </button>
+        <button class="bnav-btn" id="bnav-search" onclick="focusSearch()" title="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span>Search</span>
+        </button>
+        <button class="bnav-btn" id="bnav-back" onclick="goBack()" title="Back" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back</span>
+        </button>
+    </nav>
 
     <script src="app.js"></script>
 </body>

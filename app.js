@@ -29,7 +29,6 @@ async function loadData() {
     titles = await fetch("data/titles.json").then(r => r.json());
     contents = await fetch("data/contents.json").then(r => r.json());
 
-    createFloatingBackButton();
     setupSearch();
     showBooks();
 }
@@ -54,25 +53,48 @@ function renderContent(htmlContent) {
   `;
 }
 
-function createFloatingBackButton() {
-    // Create floating back button if not already present
-    if (!document.querySelector(".floating-back-btn")) {
-        const backBtn = document.createElement("button");
-        backBtn.className = "floating-back-btn";
-        backBtn.innerText = "←";
-        backBtn.onclick = goBack;
-        document.body.appendChild(backBtn);
+function updateBottomNav() {
+    const backBtn = document.getElementById("bnav-back");
+    const prevBtn = document.getElementById("bnav-prev");
+    const nextBtn = document.getElementById("bnav-next");
+
+    // Back: enabled when there's somewhere to go back to
+    if (backBtn) backBtn.disabled = navigationStack.length === 0;
+
+    // Prev/Next: only enabled in lyrics/content view
+    const inLyrics = currentContentHtml !== null;
+    if (prevBtn) prevBtn.disabled = !inLyrics || currentTitleIndex <= 0;
+    if (nextBtn) nextBtn.disabled = !inLyrics || currentTitleIndex >= currentTitlesList.length - 1;
+}
+
+function navigatePrev() {
+    if (currentTitleIndex > 0) {
+        showContent(currentTitlesList[currentTitleIndex - 1].id);
     }
 }
 
-function updateFloatingBackButton() {
-    const backBtn = document.querySelector(".floating-back-btn");
-    if (backBtn) {
-        if (navigationStack.length > 0) {
-            backBtn.classList.add("show");
-        } else {
-            backBtn.classList.remove("show");
-        }
+function navigateNext() {
+    if (currentTitleIndex < currentTitlesList.length - 1) {
+        showContent(currentTitlesList[currentTitleIndex + 1].id);
+    }
+}
+
+function focusSearch() {
+    // If section search is visible, focus it; otherwise open/focus global search
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    const sectionField = document.getElementById("sectionSearchField");
+    if (sectionContainer && sectionContainer.style.display !== "none" && sectionField) {
+        sectionField.focus();
+        sectionField.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        return;
+    }
+    // Otherwise open global search if not already visible, then focus
+    const globalContainer = document.getElementById("globalSearchContainer");
+    if (globalContainer && globalContainer.style.display === "none") {
+        toggleGlobalSearch();
+    } else {
+        const globalField = document.getElementById("globalSearchField");
+        if (globalField) globalField.focus();
     }
 }
 
@@ -130,7 +152,7 @@ function setupSearch() {
 
 function toggleGlobalSearch() {
     const container = document.getElementById("globalSearchContainer");
-    const searchBtn = document.getElementById("searchBtn");
+    const searchBtn = document.getElementById("bnav-search");
     if (!container) return;
     const shown = container.style.display !== "none";
     if (shown) {
@@ -149,9 +171,11 @@ function toggleGlobalSearch() {
         // add outside-click handler to close when clicking outside
         globalSearchOutsideHandler = function (e) {
             const target = e.target;
-            if (!container.contains(target) && target !== searchBtn) {
-                container.style.display = "none";
-                if (globalSearchOutsideHandler) {
+            if (!container.contains(target) && target !== searchBtn && !searchBtn.contains(target)) {
+                const field = document.getElementById("globalSearchField");
+                const hasText = field && field.value.trim() !== "";
+                if (!hasText) {
+                    container.style.display = "none";
                     document.removeEventListener("mousedown", globalSearchOutsideHandler);
                     globalSearchOutsideHandler = null;
                 }
@@ -193,7 +217,6 @@ function performSearch(query, scopeBookId = null) {
         if (!chapter) return;
         // check content page number for special books
         const bookForTitle = books.find(b => b.id == chapter.book_id);
-        const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
         if (!matched && specialBooks.includes(bookForTitle ? bookForTitle.cat_name : "")) {
             const contentForTitle = contents.find(c => c.id_title == t.id);
             if (contentForTitle && String(t.number).toLowerCase().includes(query)) {
@@ -257,7 +280,15 @@ function showSearchResults() {
             } else if (result.type === "title") {
                 navigationStack.push(showBooks);
                 navigationStack.push(() => showChapters(result.bookId));
-                navigationStack.push(() => showTitles(result.chapterId));
+                const titleBook = books.find(b => b.id == result.bookId);
+                const isSpecial = !!(titleBook && specialBooks.includes(titleBook.cat_name));
+                const isNumbered = !!(titleBook && numberedBooks.includes(titleBook.cat_name));
+                if (isSpecial) {
+                    // For special books: back goes to the sorted titles list, scrolled to this title
+                    navigationStack.push(() => showPageSortedTitlesAndScroll(result.bookId, result.id));
+                } else {
+                    navigationStack.push(() => showTitles(result.chapterId, isNumbered));
+                }
                 showContent(result.id);
             }
         };
@@ -274,16 +305,13 @@ function restoreCurrentView() {
 
 function updateHeader(title) {
     document.getElementById("headerTitle").innerText = title;
-    updateFloatingBackButton();
-    // Show the menu and search button except on the content view
-    const showSearch = title !== "Content";
-    const searchBtn = document.getElementById("searchBtn");
-    const menuBtn = document.getElementById("menuBtn");
-    if (searchBtn) searchBtn.style.display = showSearch ? "inline-block" : "none";
+    updateBottomNav();
 }
 
 function goBack() {
     currentContentHtml = null;
+    currentTitleIndex = -1;
+    currentTitlesList = [];
     const previous = navigationStack.pop();
     const g = document.getElementById("globalSearchField");
     const s = document.getElementById("sectionSearchField");
@@ -292,6 +320,7 @@ function goBack() {
     const sectionContainer = document.getElementById("sectionSearchContainer");
     if (sectionContainer) sectionContainer.style.display = "none";
     searchResults = [];
+    updateBottomNav();
     if (previous) previous();
 }
 
@@ -365,8 +394,16 @@ function showChapters(bookId) {
             div.className = "item";
             div.innerText = ch.chp_title;
             div.onclick = () => {
-                navigationStack.push(() => showChapters(bookId));
-                showTitles(ch.id, showNumber);
+                const chapterTitles = titles.filter(t => t.chapter_id == ch.id);
+                if (chapterTitles.length === 1) {
+                    // Only one title — skip the list, go straight to content
+                    // Back will return to this chapter list
+                    navigationStack.push(() => showChapters(bookId));
+                    showContent(chapterTitles[0].id);
+                } else {
+                    navigationStack.push(() => showChapters(bookId));
+                    showTitles(ch.id, showNumber);
+                }
             };
             container.appendChild(div);
         });
@@ -468,12 +505,22 @@ function showPageSortedTitles(bookId) {
     allTitlesForBook.forEach(item => {
         const div = document.createElement("div");
         div.className = "item";
+        div.dataset.titleId = item.title.id;
         div.innerText = `${item.pageNumber} - ${item.title.text}`;
         div.onclick = () => {
-            navigationStack.push(() => showPageSortedTitles(bookId));
+            navigationStack.push(() => showPageSortedTitlesAndScroll(bookId, item.title.id));
             showContent(item.title.id);
         };
         container.appendChild(div);
+    });
+}
+
+function showPageSortedTitlesAndScroll(bookId, titleId) {
+    showPageSortedTitles(bookId);
+    // After render, scroll the matching item into view
+    requestAnimationFrame(() => {
+        const el = document.querySelector(`.item[data-title-id="${titleId}"]`);
+        if (el) el.scrollIntoView({ behavior: "instant", block: "center" });
     });
 }
 
@@ -482,7 +529,7 @@ function showAbout() {
     updateHeader("Mombamomba");
     if (navigationStack.length === 0) {
         navigationStack = [showBooks];
-        updateFloatingBackButton();
+        updateBottomNav();
     }
 
     const navMenu = document.getElementById("navMenu");
@@ -502,11 +549,11 @@ function showAbout() {
     const container = document.getElementById("content");
     if (container) {
         container.innerHTML = `
-        <h1>Boky Fivavahana Anglikana</h1>
+        <h2>Boky Fivavahana Anglikana</h2>
         <p>Voninahitra ho an'Andriamanitra irery ihany.</p>
         <p>Raha misy olana na fanamarihana: <a href="mailto:tsiorymanana7@gmail.com">tsiorymanana7@gmail.com</a> / +261347048504</p>
         <p>Mampiasà finaritra.</p>
-        <footer>Credits to <i>Lead Code Group</i>.</footer>
+        <footer>Credits to <i>FEEM NTIC - Lead Code Group</i>.</footer>
         `;
     }
 }
@@ -578,75 +625,13 @@ function showContent(titleId) {
     // Store original HTML for zoom scaling and render with current zoom
     currentContentHtml = item.ct_lyrics;
     renderContent(currentContentHtml);
-    renderPrevNextButtons();
+    updateBottomNav();
 }
 
-function renderPrevNextButtons() {
-    // Remove existing nav buttons if any
-    const existingNav = document.querySelector(".content-nav-buttons");
-    if (existingNav) existingNav.remove();
-
-    // Create nav buttons container
-    const navContainer = document.createElement("div");
-    navContainer.className = "content-nav-buttons";
-    navContainer.style.display = "flex";
-    navContainer.style.gap = "10px";
-    navContainer.style.justifyContent = "space-between";
-    navContainer.style.marginTop = "20px";
-    navContainer.style.paddingTop = "20px";
-    navContainer.style.borderTop = "1px solid #ddd";
-
-    // Previous button
-    const prevBtn = document.createElement("button");
-    prevBtn.innerText = "← Previous";
-    prevBtn.style.flex = "2";
-    prevBtn.style.padding = "12px 16px";
-    prevBtn.style.background = currentTitleIndex > 0 ? "#2c3e50" : "#ccc";
-    prevBtn.style.color = "white";
-    prevBtn.style.border = "none";
-    prevBtn.style.borderRadius = "6px";
-    prevBtn.style.cursor = currentTitleIndex > 0 ? "pointer" : "not-allowed";
-    prevBtn.style.fontSize = "14px";
-    prevBtn.disabled = currentTitleIndex <= 0;
-    prevBtn.onclick = () => {
-        if (currentTitleIndex > 0) {
-            showContent(currentTitlesList[currentTitleIndex - 1].id);
-        }
-    };
-    navContainer.appendChild(prevBtn);
-
-    // Next button
-    const nextBtn = document.createElement("button");
-    nextBtn.innerText = "Next →";
-    nextBtn.style.flex = "8";
-    nextBtn.style.padding = "12px 16px";
-    nextBtn.style.background = currentTitleIndex < currentTitlesList.length - 1 ? "#2c3e50" : "#ccc";
-    nextBtn.style.color = "white";
-    nextBtn.style.border = "none";
-    nextBtn.style.borderRadius = "6px";
-    nextBtn.style.cursor = currentTitleIndex < currentTitlesList.length - 1 ? "pointer" : "not-allowed";
-    nextBtn.style.fontSize = "14px";
-    nextBtn.disabled = currentTitleIndex >= currentTitlesList.length - 1;
-    nextBtn.onclick = () => {
-        if (currentTitleIndex < currentTitlesList.length - 1) {
-            showContent(currentTitlesList[currentTitleIndex + 1].id);
-        }
-    };
-    navContainer.appendChild(nextBtn);
-
-    // Append to content container
-    const container = document.getElementById("content");
-    if (container) {
-        const itemDiv = container.querySelector(".item");
-        if (itemDiv) {
-            itemDiv.appendChild(navContainer);
-        }
-    }
-}
 
 function toggleMenu() {
     const menu = document.getElementById("navMenu");
-    const menuBtn = document.getElementById("menuBtn");
+    const menuBtn = document.getElementById("bnav-menu");
     if (!menu) return;
     const shown = menu.style.display !== "none";
     if (shown) {
@@ -660,7 +645,7 @@ function toggleMenu() {
         // attach outside click handler
         navOutsideHandler = function (e) {
             const target = e.target;
-            if (!menu.contains(target) && target !== menuBtn) {
+            if (!menu.contains(target) && target !== menuBtn && !menuBtn.contains(target)) {
                 menu.style.display = "none";
                 if (navOutsideHandler) {
                     document.removeEventListener("mousedown", navOutsideHandler);
@@ -695,22 +680,16 @@ function navigateToBook(bookName) {
 function zoomIn() {
     currentFontSize = Math.min(currentFontSize + 10, 150);
     applyFontSize();
-    // Re-render content if currently viewing HTML content with inline styles
     if (currentContentHtml) {
         renderContent(currentContentHtml);
-        // Ensure prev/next buttons are preserved after re-render
-        renderPrevNextButtons();
     }
 }
 
 function zoomOut() {
     currentFontSize = Math.max(currentFontSize - 10, 80);
     applyFontSize();
-    // Re-render content if currently viewing HTML content with inline styles
     if (currentContentHtml) {
         renderContent(currentContentHtml);
-        // Ensure prev/next buttons are preserved after re-render
-        renderPrevNextButtons();
     }
 }
 
@@ -720,17 +699,21 @@ function applyFontSize() {
     localStorage.setItem("fontSizePercentage", currentFontSize);
 }
 
-loadFontSize();
-loadData();
-
 // Handle Android hardware back button
 document.addEventListener("DOMContentLoaded", () => {
 
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    loadFontSize();
+    loadData();
 
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         const App = window.Capacitor.Plugins.App;
         const Toast = window.Capacitor.Plugins.Toast;
 
+        // Set Android navigation bar color to match bottom nav
+        const NavigationBar = window.Capacitor.Plugins.NavigationBar;
+        NavigationBar.setNavigationBarColor({ color: '#2e4175', darkButtons: false });
+
+        //Handle Back button
         let lastBackPress = 0;
 
         App.addListener("backButton", () => {
