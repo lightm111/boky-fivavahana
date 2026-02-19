@@ -51,6 +51,7 @@ function renderContent(htmlContent) {
       ${scaledHtml}
     </div>
   `;
+    window.scrollTo(0, 0);
 }
 
 function updateBottomNav() {
@@ -135,6 +136,12 @@ function setupSearch() {
                 performSearch(query);
             }
         });
+        globalField.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                globalField.blur();
+            }
+        });
     }
 
     if (sectionField) {
@@ -145,6 +152,12 @@ function setupSearch() {
                 restoreCurrentView();
             } else {
                 performSearch(query, currentScopeBookId);
+            }
+        });
+        sectionField.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sectionField.blur();
             }
         });
     }
@@ -361,12 +374,13 @@ function showChapters(bookId) {
     currentView = () => showChapters(bookId);
     updateHeader(book.cat_name);
 
-    // For Salamo jump directly to titles list (skip the single-chapter view)
-    if (book && book.cat_name === "Salamo") {
+    // For Salamo and Litorjia Provinsialy jump directly to titles list (skip the single-chapter view)
+    const oneChapterBook = ["Salamo", "Litorjia Provinsialy"]
+    if (book && oneChapterBook.includes(book.cat_name)) {
         // find first chapter for this book and show its titles; keep back stack as-is
         const firstChapter = chapters.find(c => c.book_id == bookId);
         if (firstChapter) {
-            showTitles(firstChapter.id, true);
+            showTitles(firstChapter.id, book.cat_name === "Salamo" ? true : false);
             return;
         }
     }
@@ -387,26 +401,39 @@ function showChapters(bookId) {
     // add floating toggle button for special books
     if (showNumber) renderSpecialToggle(bookId);
 
-    chapters
-        .filter(c => c.book_id == bookId)
-        .forEach(ch => {
-            const div = document.createElement("div");
-            div.className = "item";
-            div.innerText = ch.chp_title;
-            div.onclick = () => {
-                const chapterTitles = titles.filter(t => t.chapter_id == ch.id);
-                if (chapterTitles.length === 1) {
-                    // Only one title — skip the list, go straight to content
-                    // Back will return to this chapter list
-                    navigationStack.push(() => showChapters(bookId));
-                    showContent(chapterTitles[0].id);
-                } else {
-                    navigationStack.push(() => showChapters(bookId));
-                    showTitles(ch.id, showNumber);
-                }
-            };
-            container.appendChild(div);
-        });
+    // Group chapters by name to merge same-named chapters (e.g. in Fihirana)
+    const seen = new Set();
+    const bookChapters = chapters.filter(c => c.book_id == bookId);
+
+    bookChapters.forEach(ch => {
+        if (seen.has(ch.chp_title)) return; // already rendered this group
+        seen.add(ch.chp_title);
+
+        // All chapters in this book with the same name
+        const group = bookChapters.filter(c => c.chp_title === ch.chp_title);
+        const groupIds = group.map(c => c.id);
+        const groupTitles = groupIds.flatMap(cid => titles.filter(t => t.chapter_id == cid));
+
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerText = ch.chp_title;
+        div.onclick = () => {
+            if (groupTitles.length === 1) {
+                // Single title across all same-named chapters — skip list, go to content
+                navigationStack.push(() => showChapters(bookId));
+                showContent(groupTitles[0].id);
+            } else if (group.length > 1) {
+                // Multiple chapters share this name — show merged title list
+                navigationStack.push(() => showChapters(bookId));
+                showGroupedTitles(groupIds, ch.chp_title, showNumber);
+            } else {
+                // Normal single chapter
+                navigationStack.push(() => showChapters(bookId));
+                showTitles(ch.id, showNumber);
+            }
+        };
+        container.appendChild(div);
+    });
 }
 
 function showTitles(chapterId, showNumber = false) {
@@ -455,6 +482,45 @@ function showTitles(chapterId, showNumber = false) {
 
     if (isNumbered) renderSpecialToggle(book.id);
 
+}
+
+function showGroupedTitles(chapterIds, groupName, showNumber = false) {
+    currentView = () => showGroupedTitles(chapterIds, groupName, showNumber);
+    updateHeader(groupName);
+
+    // Section search — scope to the book of the first chapter
+    const firstChapter = chapters.find(c => c.id == chapterIds[0]);
+    if (firstChapter) {
+        currentScopeBookId = firstChapter.book_id;
+        const sectionContainer = document.getElementById("sectionSearchContainer");
+        const sectionField = document.getElementById("sectionSearchField");
+        const book = books.find(b => b.id == firstChapter.book_id);
+        if (sectionContainer) sectionContainer.style.display = "block";
+        if (sectionField) sectionField.placeholder = `Hitady @${book ? book.cat_name : "ato"}...`;
+    }
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    // Collect titles from all chapters in the group, in order
+    const allTitles = chapterIds
+        .flatMap(cid => titles.filter(t => t.chapter_id == cid))
+        .sort((a, b) => (a.number || 0) - (b.number || 0))
+
+    allTitles.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerText = showNumber ? `${t.number} - ${t.text}` : t.text;
+        div.onclick = () => {
+            navigationStack.push(() => showGroupedTitles(chapterIds, groupName, showNumber));
+            showContent(t.id);
+        };
+        container.appendChild(div);
+    });
+
+    // Show toggle button for numbered books
+    const book = firstChapter ? books.find(b => b.id == firstChapter.book_id) : null;
+    if (book && numberedBooks.includes(book.cat_name)) renderSpecialToggle(book.id);
 }
 
 function showPageSortedTitles(bookId) {
@@ -566,7 +632,6 @@ function showContent(titleId) {
     const titleObj = titles.find(t => t.id == titleId);
     const chapterObj = chapters.find(c => c.id == (titleObj ? titleObj.chapter_id : null));
     const bookObj = chapterObj ? books.find(b => b.id == chapterObj.book_id) : null;
-    const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
     let headerText = titleObj ? titleObj.text : "Content";
     if (bookObj && specialBooks.includes(bookObj.cat_name)) {
         const itemContent = contents.find(c => c.id_title == titleId);
@@ -609,15 +674,16 @@ function showContent(titleId) {
     // Get all chapters of this book
     const bookChapters = chapters
         .filter(c => c.book_id == bookId)
-        .sort((a, b) => a.id - b.id); // keep natural order
+    // .sort((a, b) => a.id - b.id); // keep natural order
 
     // Collect all titles in chapter order
     bookChapters.forEach(ch => {
         const chapterTitles = titles
             .filter(t => t.chapter_id == ch.id)
-            .sort((a, b) => (a.number || 0) - (b.number || 0));
+        // .sort((a, b) => (a.number || 0) - (b.number || 0));
         bookTitles.push(...chapterTitles);
     });
+    bookTitles = bookTitles.sort((a, b) => (a.number || 0) - (b.number || 0))
 
     currentTitlesList = bookTitles;
     currentTitleIndex = currentTitlesList.findIndex(t => t.id == titleId);

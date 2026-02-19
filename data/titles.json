@@ -7324,5 +7324,104 @@
     "ct_subtext": null,
     "date_add": 1618325926,
     "date_upd": 1618325926
+  },
+  {
+    "id": 1130,
+    "text": "FIOMANANA HO AMIN'NY EOKARISTA MASINA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1131,
+    "text": "NY VAVAKA FIVALOZANA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1132,
+    "text": "NY TENIN'ANDRIAMANITRA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1133,
+    "text": "NY RANOM-BAVAKA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1134,
+    "text": "NY FAMPIHAVANANA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1135,
+    "text": "FISAORANA LEHIBE",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1136,
+    "text": "NY VAVAKA FISAORANA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1137,
+    "text": "FAMAKIANA NY MOFO",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1138,
+    "text": "FIARAHA-MANDRAY",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1139,
+    "text": "NY FAMARANANA",
+    "chapter_id": 109,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 1140,
+    "text": "FANDEVENANA NY MATY",
+    "chapter_id": 110,
+    "number": 0,
+    "ct_subtext": null,
+    "date_add": 0,
+    "date_upd": null
   }
 ]

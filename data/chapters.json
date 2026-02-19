@@ -838,5 +838,21 @@
     "chp_nbr_content": 1,
     "date_add": 1618322252,
     "date_upd": 1618322276
+  },
+  {
+    "id": 109,
+    "chp_title": "Litorjia Provinsialy",
+    "book_id": 6,
+    "chp_nbr_content": 1,
+    "date_add": null,
+    "date_upd": null
+  },
+  {
+    "id": 110,
+    "chp_title": "FANDEVENANA NY MATY",
+    "book_id": 1,
+    "chp_nbr_content": 1,
+    "date_add": null,
+    "date_upd": null
   }
 ]

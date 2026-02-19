@@ -67,10 +67,6 @@ header {
   border-bottom: none;
 }
 
-.nav-menu a:hover {
-  background: #f5f5f5;
-}
-
 #sectionSearchContainer {
   position: sticky;
   top: 56px;
@@ -114,10 +110,6 @@ header {
   transition: transform 0.15s ease;
 }
 
-.zoom-btn:hover {
-  transform: translateY(-2px);
-}
-
 .zoom-btn:active {
   transform: translateY(0);
 }
@@ -142,9 +134,6 @@ header {
   transition: transform 0.15s ease;
 }
 
-.floating-toggle-btn:hover {
-  transform: translateY(-2px);
-}
 .floating-toggle-btn:active {
   transform: translateY(0);
 }
@@ -165,6 +154,7 @@ header {
 }
 
 #lyrics {
+  font-family: "Times New Roman", Times, serif;
   background: white;
   padding: 16px;
   margin-bottom: 10px;
@@ -215,11 +205,6 @@ header {
   font-family: system-ui, sans-serif;
   letter-spacing: 0.02em;
   line-height: 1;
-}
-
-.bnav-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
 }
 
 .bnav-btn:active:not(:disabled) {
