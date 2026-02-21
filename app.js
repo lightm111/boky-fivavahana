@@ -8,7 +8,6 @@ let navOutsideHandler = null;
 let currentBookViewMode = "chapters"; // "chapters" or "pages" for special books
 let currentFontSize = 100; // percentage, default 100%
 let currentContentHtml = null; // Store original HTML content for zoom scaling
-let currentChapterId = null; // Track current chapter for prev/next navigation
 let currentTitleIndex = -1; // Track current title index for prev/next navigation
 let currentTitlesList = []; // Store current list of titles for prev/next navigation
 const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
@@ -46,11 +45,7 @@ function renderContent(htmlContent) {
     // Helper function to render content HTML with current zoom applied
     const container = document.getElementById("content");
     const scaledHtml = applyZoomToHtml(htmlContent, currentFontSize);
-    container.innerHTML = `
-    <div id="lyrics">
-      ${scaledHtml}
-    </div>
-  `;
+    container.innerHTML = `<div id="lyrics">${scaledHtml}</div>`;
     window.scrollTo(0, 0);
 }
 
@@ -86,7 +81,7 @@ function focusSearch() {
     const sectionField = document.getElementById("sectionSearchField");
     if (sectionContainer && sectionContainer.style.display !== "none" && sectionField) {
         sectionField.focus();
-        sectionField.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        sectionField.scrollIntoView({ behavior: "instant", block: "nearest" });
         return;
     }
     // Otherwise open global search if not already visible, then focus
@@ -557,15 +552,7 @@ function showPageSortedTitles(bookId) {
     const container = document.getElementById("content");
     container.innerHTML = "";
 
-    // remove any existing floating toggle button and add new one
-    const existingToggle = document.querySelector(".floating-toggle-btn");
-    if (existingToggle) existingToggle.remove();
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.className = "floating-toggle-btn";
-    toggleBtn.innerText = "Ch";
-    toggleBtn.onclick = () => showChapters(bookId);
-    document.body.appendChild(toggleBtn);
+    renderSpecialToggle(bookId, "pages");
 
     // display all titles sorted by page number
     allTitlesForBook.forEach(item => {
@@ -609,8 +596,7 @@ function showAbout() {
     // hide section search and remove toggle button
     const sectionContainer = document.getElementById("sectionSearchContainer");
     if (sectionContainer) sectionContainer.style.display = "none";
-    const existingToggle = document.querySelector(".floating-toggle-btn");
-    if (existingToggle) existingToggle.remove();
+    removeFloatingToggle();
 
     const container = document.getElementById("content");
     if (container) {
@@ -669,21 +655,11 @@ function showContent(titleId) {
     const bookId = chapterObj.book_id;
 
     // Build full ordered list of titles for the entire book
-    let bookTitles = [];
-
-    // Get all chapters of this book
-    const bookChapters = chapters
+    const bookTitles = [];
+    chapters
         .filter(c => c.book_id == bookId)
-    // .sort((a, b) => a.id - b.id); // keep natural order
-
-    // Collect all titles in chapter order
-    bookChapters.forEach(ch => {
-        const chapterTitles = titles
-            .filter(t => t.chapter_id == ch.id)
-        // .sort((a, b) => (a.number || 0) - (b.number || 0));
-        bookTitles.push(...chapterTitles);
-    });
-    bookTitles = bookTitles.sort((a, b) => (a.number || 0) - (b.number || 0))
+        .forEach(ch => bookTitles.push(...titles.filter(t => t.chapter_id == ch.id)));
+    bookTitles.sort((a, b) => (a.number || 0) - (b.number || 0));
 
     currentTitlesList = bookTitles;
     currentTitleIndex = currentTitlesList.findIndex(t => t.id == titleId);
@@ -772,27 +748,25 @@ document.addEventListener("DOMContentLoaded", () => {
     loadData();
 
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        const App = window.Capacitor.Plugins.App;
-        const Toast = window.Capacitor.Plugins.Toast;
-
         // Set Android navigation bar color to match bottom nav
         const NavigationBar = window.Capacitor.Plugins.NavigationBar;
-        NavigationBar.setNavigationBarColor({ color: '#2e4175', darkButtons: false });
+        if (NavigationBar) {
+            NavigationBar.setNavigationBarColor({ color: '#2e4175', darkButtons: false });
+        }
 
         //Handle Back button
+        const App = window.Capacitor.Plugins.App;
+        const Toast = window.Capacitor.Plugins.Toast;
         let lastBackPress = 0;
-
         App.addListener("backButton", () => {
             if (navigationStack.length > 0) {
                 goBack();
                 return;
             }
-
             if (currentView && currentView !== showBooks) {
                 goBack();
                 return;
             }
-
             const now = Date.now();
             if (now - lastBackPress < 2000) {
                 App.exitApp();

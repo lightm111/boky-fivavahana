@@ -67,6 +67,10 @@ header {
   border-bottom: none;
 }
 
+.nav-menu a:active {
+  background: #f0f0f0;
+}
+
 #sectionSearchContainer {
   position: sticky;
   top: 56px;
@@ -78,7 +82,7 @@ header {
 
 #content {
   padding: 16px;
-  padding-bottom: 90px;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
   max-width: 900px;
   margin: 0 auto;
 }
@@ -168,17 +172,17 @@ header {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: calc(60px + env(safe-area-inset-bottom));
   background: #2e4175;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   z-index: 200;
   box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.22);
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .bnav-btn {
   flex: 1;
+  height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -254,7 +258,7 @@ header {
 
   #content {
     padding: 12px;
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   .zoom-buttons {
@@ -296,6 +300,10 @@ header {
   }
 
   .bottom-nav {
+    height: calc(58px + env(safe-area-inset-bottom));
+  }
+
+  .bnav-btn {
     height: 58px;
   }
 
@@ -337,7 +345,7 @@ header {
 
   #content {
     padding: 10px;
-    padding-bottom: 74px;
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
   }
 
   .zoom-buttons {
@@ -381,6 +389,10 @@ header {
   }
 
   .bottom-nav {
+    height: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .bnav-btn {
     height: 56px;
   }
 
