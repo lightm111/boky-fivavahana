@@ -311,8 +311,9 @@ function restoreCurrentView() {
     }
 }
 
-function updateHeader(title) {
+function updateHeader(title, subtitle = "") {
     document.getElementById("headerTitle").innerText = title;
+    document.getElementById("headerSubtitle").innerText = subtitle;
     updateBottomNav();
 }
 
@@ -618,16 +619,17 @@ function showContent(titleId) {
     const titleObj = titles.find(t => t.id == titleId);
     const chapterObj = chapters.find(c => c.id == (titleObj ? titleObj.chapter_id : null));
     const bookObj = chapterObj ? books.find(b => b.id == chapterObj.book_id) : null;
-    let headerText = titleObj ? titleObj.text : "Content";
+    let headerSubtitle = titleObj ? titleObj.text : "Content";
+    let itemSubText = ""
     if (bookObj && specialBooks.includes(bookObj.cat_name)) {
         const itemContent = contents.find(c => c.id_title == titleId);
-
+        itemSubText = itemContent.ct_subtext
         if (itemContent && titleObj.number) {
-            headerText = `${titleObj.number} - ${titleObj.text}`;
+            headerSubtitle = `${titleObj.number} - ${titleObj.text}`;
         }
 
     }
-    updateHeader(headerText);
+    updateHeader(bookObj.cat_name, headerSubtitle);
 
     // hide section search while reading content
     const sectionContainer = document.getElementById("sectionSearchContainer");
@@ -665,7 +667,7 @@ function showContent(titleId) {
     currentTitleIndex = currentTitlesList.findIndex(t => t.id == titleId);
 
     // Store original HTML for zoom scaling and render with current zoom
-    currentContentHtml = item.ct_lyrics;
+    currentContentHtml = itemSubText ? `<div id="subText">${itemSubText}</div><hr />` + item.ct_lyrics : item.ct_lyrics;
     renderContent(currentContentHtml);
     updateBottomNav();
 }
