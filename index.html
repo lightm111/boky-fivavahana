@@ -36,9 +36,17 @@
     </div>
 
     <div id="content"></div>
-    <div class="zoom-buttons">
-        <button class="zoom-btn" id="zoomInBtn" onclick="zoomIn()" title="Increase font size">+</button>
-        <button class="zoom-btn" id="zoomOutBtn" onclick="zoomOut()" title="Decrease font size">−</button>
+    <div class="float-buttons">
+        <button class="float-btn" id="floatingToggleBtn" style="display:none;"></button>
+        <button class="float-btn" id="autoScrollBtn" onclick="toggleAutoScroll()" title="Auto scroll"
+            style="display:none;">
+            <!-- play icon shown when stopped, pause when scrolling — toggled via class -->
+            <svg id="autoScrollIcon" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                <polygon points="5,3 19,12 5,21" />
+            </svg>
+        </button>
+        <button class="float-btn" id="zoomInBtn" onclick="zoomIn()" title="Increase font size">+</button>
+        <button class="float-btn" id="zoomOutBtn" onclick="zoomOut()" title="Decrease font size">−</button>
     </div>
 
 

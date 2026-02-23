@@ -10,6 +10,9 @@ let currentFontSize = 100; // percentage, default 100%
 let currentContentHtml = null; // Store original HTML content for zoom scaling
 let currentTitleIndex = -1; // Track current title index for prev/next navigation
 let currentTitlesList = []; // Store current list of titles for prev/next navigation
+let autoScrollInterval = null;
+let autoScrolling = false;
+const AUTO_SCROLL_SPEED = 1; // px per tick
 const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
 const numberedBooks = ["Fihirana", "H.A.A"];
 
@@ -47,6 +50,9 @@ function renderContent(htmlContent) {
     const scaledHtml = applyZoomToHtml(htmlContent, currentFontSize);
     container.innerHTML = `<div id="lyrics">${scaledHtml}</div>`;
     window.scrollTo(0, 0);
+    stopAutoScroll();
+    const btn = document.getElementById("autoScrollBtn");
+    if (btn) btn.style.display = "flex";
 }
 
 function updateBottomNav() {
@@ -64,12 +70,14 @@ function updateBottomNav() {
 }
 
 function navigatePrev() {
+    stopAutoScroll();
     if (currentTitleIndex > 0) {
         showContent(currentTitlesList[currentTitleIndex - 1].id);
     }
 }
 
 function navigateNext() {
+    stopAutoScroll();
     if (currentTitleIndex < currentTitlesList.length - 1) {
         showContent(currentTitlesList[currentTitleIndex + 1].id);
     }
@@ -96,25 +104,23 @@ function focusSearch() {
 
 // NEW helper: remove any floating toggle button
 function removeFloatingToggle() {
-    const existingToggle = document.querySelector(".floating-toggle-btn");
-    if (existingToggle) existingToggle.remove();
+    const btn = document.getElementById("floatingToggleBtn");
+    if (btn) btn.style.display = "none";
 }
 
 function renderSpecialToggle(bookId, mode = "chapters") {
-    removeFloatingToggle();
-
-    const toggleBtn = document.createElement("button");
-    toggleBtn.className = "floating-toggle-btn";
-
+    const btn = document.getElementById("floatingToggleBtn");
+    if (!btn) return;
+    btn.style.display = "flex";
+    btn.style.fontWeight = "700";
+    btn.style.fontSize = "13px";
     if (mode === "chapters") {
-        toggleBtn.innerText = "123";
-        toggleBtn.onclick = () => showPageSortedTitles(bookId);
+        btn.innerText = "123";
+        btn.onclick = () => showPageSortedTitles(bookId);
     } else {
-        toggleBtn.innerText = "Ch";
-        toggleBtn.onclick = () => showChapters(bookId);
+        btn.innerText = "Ch";
+        btn.onclick = () => showChapters(bookId);
     }
-
-    document.body.appendChild(toggleBtn);
 }
 
 function setupSearch() {
@@ -318,6 +324,9 @@ function updateHeader(title, subtitle = "") {
 }
 
 function goBack() {
+    stopAutoScroll();
+    const autoBtn = document.getElementById("autoScrollBtn");
+    if (autoBtn) autoBtn.style.display = "none";
     currentContentHtml = null;
     currentTitleIndex = -1;
     currentTitlesList = [];
@@ -741,6 +750,45 @@ function applyFontSize() {
     const root = document.documentElement;
     root.style.fontSize = (16 * (currentFontSize / 100)) + "px";
     localStorage.setItem("fontSizePercentage", currentFontSize);
+}
+
+function stopAutoScroll() {
+    if (autoScrollInterval) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+    }
+    autoScrolling = false;
+    const btn = document.getElementById("autoScrollBtn");
+    const icon = document.getElementById("autoScrollIcon");
+    if (btn) btn.classList.remove("scrolling");
+    if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+}
+
+function startAutoScroll() {
+    autoScrolling = true;
+    const btn = document.getElementById("autoScrollBtn");
+    const icon = document.getElementById("autoScrollIcon");
+    if (btn) btn.classList.add("scrolling");
+    if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    autoScrollInterval = setInterval(() => {
+        const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
+        if (atBottom) {
+            stopAutoScroll();
+        } else {
+            window.scrollBy(0, AUTO_SCROLL_SPEED);
+        }
+    }, 100);
+}
+
+function toggleAutoScroll() {
+    if (autoScrolling) {
+        stopAutoScroll();
+    } else {
+        startAutoScroll();
+    }
+
+    // Stop autoscroll if user manually scrolls (touch gesture)
+    window.addEventListener("touchstart", stopAutoScroll, { once: true, passive: true });
 }
 
 // Handle Android hardware back button

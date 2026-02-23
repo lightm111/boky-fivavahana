@@ -96,7 +96,7 @@ header {
   margin: 0 auto;
 }
 
-.zoom-buttons {
+.float-buttons {
   position: fixed;
   right: 20px;
   bottom: 140px;
@@ -106,7 +106,7 @@ header {
   z-index: 50;
 }
 
-.zoom-btn {
+.float-btn {
   width: 44px;
   height: 44px;
   padding: 0;
@@ -123,32 +123,13 @@ header {
   transition: transform 0.15s ease;
 }
 
-.zoom-btn:active {
+.float-btn:active {
   transform: translateY(0);
 }
 
-/* ── floating toggle btn kept for special book chapter/page switching ── */
-.floating-toggle-btn {
-  position: fixed;
-  bottom: 70px;
-  right: 20px;
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  background: #2c3e50;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 190;
-  transition: transform 0.15s ease;
-}
-
-.floating-toggle-btn:active {
-  transform: translateY(0);
+.float-btn.scrolling {
+  background: #dee73c;
+  box-shadow: 0 4px 12px rgba(231, 231, 60, 0.4);
 }
 
 .item {
@@ -273,11 +254,11 @@ header {
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
-  .zoom-buttons {
+  .float-buttons {
     bottom: 128px;
   }
 
-  .zoom-btn {
+  .float-btn {
     width: 44px;
     height: 44px;
     font-size: 16px;
@@ -302,13 +283,6 @@ header {
   .nav-menu a {
     padding: 10px 14px;
     font-size: 15px;
-  }
-
-  .floating-toggle-btn {
-    width: 44px;
-    height: 44px;
-    bottom: 68px;
-    right: 14px;
   }
 
   .bottom-nav {
@@ -363,12 +337,12 @@ header {
     padding-bottom: calc(74px + env(safe-area-inset-bottom));
   }
 
-  .zoom-buttons {
+  .float-buttons {
     bottom: 116px;
     right: 12px;
   }
 
-  .zoom-btn {
+  .float-btn {
     width: 40px;
     height: 40px;
     font-size: 16px;
@@ -393,14 +367,6 @@ header {
   .nav-menu a {
     padding: 9px 12px;
     font-size: 14px;
-  }
-
-  .floating-toggle-btn {
-    width: 40px;
-    height: 40px;
-    bottom: 64px;
-    right: 10px;
-    font-size: 11px;
   }
 
   .bottom-nav {
