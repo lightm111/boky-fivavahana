@@ -12,7 +12,7 @@ let currentTitleIndex = -1; // Track current title index for prev/next navigatio
 let currentTitlesList = []; // Store current list of titles for prev/next navigation
 let autoScrollInterval = null;
 let autoScrolling = false;
-const AUTO_SCROLL_SPEED = 1; // px per tick
+const AUTO_SCROLL_SPEED = 10; // px per second
 const specialBooks = ["Fihirana", "Salamo", "H.A.A"];
 const numberedBooks = ["Fihirana", "H.A.A"];
 
@@ -752,16 +752,22 @@ function applyFontSize() {
     localStorage.setItem("fontSizePercentage", currentFontSize);
 }
 
-function stopAutoScroll() {
-    if (autoScrollInterval) {
-        clearInterval(autoScrollInterval);
-        autoScrollInterval = null;
+function stopAutoScroll(e) {
+    // If the touch was on the scroll button, let toggleAutoScroll handle it
+    if (e) {
+        const btn = document.getElementById("autoScrollBtn");
+        if (btn && btn.contains(e.target)) return;
     }
     autoScrolling = false;
+    if (autoScrollInterval) {
+        cancelAnimationFrame(autoScrollInterval);
+        autoScrollInterval = null;
+    }
     const btn = document.getElementById("autoScrollBtn");
     const icon = document.getElementById("autoScrollIcon");
     if (btn) btn.classList.remove("scrolling");
     if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    document.removeEventListener("touchstart", stopAutoScroll);
 }
 
 function startAutoScroll() {
@@ -770,14 +776,36 @@ function startAutoScroll() {
     const icon = document.getElementById("autoScrollIcon");
     if (btn) btn.classList.add("scrolling");
     if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-    autoScrollInterval = setInterval(() => {
+
+    // Use rAF for smooth, reliable scrolling on Android WebView
+    let lastTime = null;
+    let accumulated = 0; // fractional pixel accumulator
+
+    function rafScroll(timestamp) {
+        if (!autoScrolling) return;
+        if (lastTime !== null) {
+            const delta = timestamp - lastTime; // ms since last frame
+            accumulated += AUTO_SCROLL_SPEED * delta / 1000; // px/s → px this frame
+            const pixels = Math.floor(accumulated);
+            if (pixels >= 1) {
+                window.scrollBy(0, pixels);
+                accumulated -= pixels;
+            }
+        }
+        lastTime = timestamp;
         const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
         if (atBottom) {
             stopAutoScroll();
         } else {
-            window.scrollBy(0, AUTO_SCROLL_SPEED);
+            autoScrollInterval = requestAnimationFrame(rafScroll);
         }
-    }, 100);
+    }
+    autoScrollInterval = requestAnimationFrame(rafScroll);
+
+    // Stop on manual touch — delay so the starting tap doesn't immediately cancel
+    setTimeout(() => {
+        document.addEventListener("touchstart", stopAutoScroll, { passive: true });
+    }, 300);
 }
 
 function toggleAutoScroll() {
@@ -786,9 +814,6 @@ function toggleAutoScroll() {
     } else {
         startAutoScroll();
     }
-
-    // Stop autoscroll if user manually scrolls (touch gesture)
-    window.addEventListener("touchstart", stopAutoScroll, { once: true, passive: true });
 }
 
 // Handle Android hardware back button
