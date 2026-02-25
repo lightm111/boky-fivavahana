@@ -9,6 +9,7 @@ header {
   background: #2e4175;
   color: white;
   padding: 12px 16px;
+  padding-top: 50px;
   position: sticky;
   top: 0;
   z-index: 101;
@@ -149,6 +150,7 @@ header {
   left: 0;
   right: 0;
   height: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: 50px;
   background: #2e4175;
   display: flex;
   align-items: flex-start;
@@ -205,6 +207,7 @@ header {
 @media (max-width: 768px) {
   header {
     padding: 10px 16px;
+    padding-top: 50px;
   }
 
   #headerTitle {
@@ -282,6 +285,7 @@ header {
 @media (max-width: 480px) {
   header {
     padding: 8px 12px;
+    padding-top: 50px;
   }
 
   #headerTitle {
