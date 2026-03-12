@@ -34,7 +34,7 @@ Boky Fivavahana is a free, offline-first Android app providing the full content 
 ## Install
 
 - This app works on any Android 7.0 (N) up to Android 16
-- Grab the latest version of the [boky-fivavahana.apk](https://github.com/lightm111/boky-fivavahana/releases/latest) release
+- Grab the latest version of the [boky-fivavahana.apk](https://github.com/ulightm111/boky-fivavahana/releases/latest) release
 - Enable "Installation fronm unknown sources" then install
 
 ---

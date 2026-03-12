@@ -1,4 +1,5 @@
 node_modules
-www
-icons
-raw
+/www
+/icons
+/raw
+/metadata

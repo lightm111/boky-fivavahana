@@ -1,11 +1,12 @@
 {
   "name": "boky-fivavahana",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "private": true,
   "description": "Boky Fivavahana Anglikana",
   "scripts": {
-    "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css app.js data www/",
-    "prepare": "npm run build:web",
+    "prepare": "rm -rf www && mkdir -p www && cp -r index.html style.css app.js data www/",
+    "web": "npx serve www",
+    "android": "npx cap sync && npx cap run android",
     "generate-logo": "npx @capacitor/assets generate --iconBackgroundColor '#003296' --splashBackgroundColor '#003296'"
   },
   "dependencies": {
