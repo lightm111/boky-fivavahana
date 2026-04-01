@@ -2,6 +2,7 @@ let books, chapters, titles, contents;
 let hiraSongs = [];
 let haaSongs = [];
 let salamoPsalms = [];
+let litpContents = [];
 let navigationStack = [];
 let currentView = null;
 let searchResults = [];
@@ -17,7 +18,6 @@ let autoScrollInterval = null;
 let autoScrolling = false;
 const AUTO_SCROLL_SPEED = 10; // px per second
 const specialBooks = ["Fihirana", "Salamo", "Hanandratra Anao Aho"];
-const numberedBooks = ["Fihirana", "Hanandratra Anao Aho"];
 
 // Load saved font size on page load
 async function loadFontSize() {
@@ -35,6 +35,7 @@ async function loadData() {
     hiraSongs = await fetch("data/HIRA.json").then(r => r.json()).then(d => d.songs || []);
     haaSongs = await fetch("data/HAA.json").then(r => r.json()).then(d => d.songs || []);
     salamoPsalms = await fetch("data/SALAMO.json").then(r => r.json()).then(d => d.psalms || []);
+    litpContents = await fetch("data/LitP.json").then(r => r.json()).then(d => d.contents || []);
 
     // old data intentionally ignored for now.
     chapters = [];
@@ -124,11 +125,11 @@ function renderToggleButton(bookId, currentMode) {
     btn.style.display = "flex";
 
     if (currentMode === "sections") {
-        btn.innerText = "📋";
+        btn.innerText = "Ch";
         btn.title = "Switch to titles view";
         btn.onclick = () => showFlatSongsView(bookId);
     } else {
-        btn.innerText = "🏷️";
+        btn.innerText = "123";
         btn.title = "Switch to sections view";
         btn.onclick = () => showGroupedSongsView(bookId);
     }
@@ -230,10 +231,10 @@ function performSearch(query, scopeBookId = null) {
             }
         });
 
-    // Search HIRA and H.A.A songs
+    // Search HIRA and Hanandratra Anao Aho songs
     [
         { bookName: "Fihirana", bookId: books.find(b => b.name === "Fihirana")?.id, data: hiraSongs },
-        { bookName: "H.A.A", bookId: books.find(b => b.name === "H.A.A")?.id, data: haaSongs }
+        { bookName: "Hanandratra Anao Aho", bookId: books.find(b => b.name === "Hanandratra Anao Aho")?.id, data: haaSongs }
     ].forEach(bookInfo => {
         if (!bookInfo.bookId) return;
         if (scopeBookId != null && scopeBookId != bookInfo.bookId) return;
@@ -244,7 +245,12 @@ function performSearch(query, scopeBookId = null) {
             if (!matched && song.title && song.title.toLowerCase().includes(normalized)) matched = true;
 
             if (matched) {
-                searchResults.push({ type: "song", bookId: bookInfo.bookId, id: song.id, title: song.title, subtitle: `${bookInfo.bookName} → ${song.section || ""}` });
+                searchResults.push(
+                    {
+                        type: "song", bookId: bookInfo.bookId, id: song.id,
+                        title: `${song.id} - ${song.title}`, subtitle: `${bookInfo.bookName} → ${song.section || ""}`
+                    }
+                );
             }
         });
     });
@@ -365,9 +371,7 @@ function showBooks() {
     const container = document.getElementById("content");
     container.innerHTML = "";
 
-    // Only show rewritten data sources for now.
     books
-        .filter(book => specialBooks.includes(book.name))
         .forEach(book => {
             const div = document.createElement("div");
             div.className = "item";
@@ -393,17 +397,22 @@ function isHiraBook(book) {
 }
 
 function isHaaBook(book) {
-    return book && book.name === "H.A.A";
+    return book && book.name === "Hanandratra Anao Aho";
 }
 
 function isSalamoBook(book) {
     return book && book.name === "Salamo";
 }
 
+function isLitPBook(book) {
+    return book && book.name === "Litorjia Provinsialy";
+}
+
 function getBookData(book) {
     if (isHiraBook(book)) return hiraSongs;
     if (isHaaBook(book)) return haaSongs;
     if (isSalamoBook(book)) return salamoPsalms;
+    if (isLitPBook(book)) return litpContents;
     return null;
 }
 
@@ -430,6 +439,11 @@ function showSections(bookId) {
 
     if (isSalamoBook(book)) {
         showSalamoList(bookId);
+        return;
+    }
+
+    if (isLitPBook(book)) {
+        showLitPSections(bookId);
         return;
     }
 
@@ -519,6 +533,87 @@ function showGroupedSongsView(bookId) {
     renderToggleButton(bookId, "sections");
 }
 
+function showLitPSections(bookId) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    currentView = () => showLitPSections(bookId);
+    updateHeader(book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    const sections = litpContents
+        .map(sectionObj => sectionObj.section)
+        .filter((s, i, arr) => s && arr.indexOf(s) === i);
+
+    if (sections.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "item";
+        empty.innerText = "Tsy misy fizarana hita ao amin'ny Litorjia Provinsialy.";
+        container.appendChild(empty);
+        return;
+    }
+
+    sections.forEach(section => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerText = section;
+        div.onclick = () => {
+            navigationStack.push(() => showLitPSections(bookId));
+            showLitPSectionContent(bookId, section);
+        };
+        container.appendChild(div);
+    });
+}
+
+function showLitPSectionContent(bookId, sectionName) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    const sectionObj = litpContents.find(s => s.section === sectionName);
+    if (!sectionObj) return;
+
+    currentView = () => showLitPSectionContent(bookId, sectionName);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    let html = "";
+    sectionObj.items
+        .sort((a, b) => Number(a.id) - Number(b.id))
+        .forEach(item => {
+            html += `<p class="lit"><span style="display: inline-block; width: 2rem">
+            <strong>${item.id}-</strong></span>${item.content.slice(3)}`;
+        });
+
+    container.innerHTML = html.replace(
+        /<br\s*\/?>/g,
+        '<br><span style="margin-left:2rem; display:inline-block;"></span>'
+    );
+
+    currentContentHtml = html;
+    // Set up prev/next navigation for sections
+    const sections = litpContents
+        .map(sectionObj => sectionObj.section)
+        .filter((s, i, arr) => s && arr.indexOf(s) === i);
+    currentTitlesList = sections.map(s => ({ id: s }));
+    currentTitleIndex = sections.indexOf(sectionName);
+
+    updateBottomNav();
+}
+
 function showFlatSongsView(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
@@ -572,11 +667,10 @@ function showSong(bookId, songId) {
     const lines = [];
 
     if (song.intro) {
-        lines.push(`<div id=\"intro\">${song.intro}</div>`);
+        lines.push(`<div class=\"note\" id=\"intro\">${song.intro}</div>`);
+        lines.push("<hr>")
     }
-    if (song.headnote) {
-        lines.push(`<div id=\"headnote\">${song.headnote}</div>`);
-    }
+    if (song.headnote) lines.push(`<div class=\"note\" id=\"headnote\">${song.headnote}</div>`)
 
     if (song.verses && song.verses.length > 0) {
         song.verses.forEach(v => {
@@ -591,7 +685,7 @@ function showSong(bookId, songId) {
             }
 
             lines.push("<div class=\"verse\">")
-            lines.push(`<span><strong>${v.verse_number}.</strong></span>`);
+            if (isHiraBook(book)) lines.push(`<span><strong>${v.verse_number}.</strong></span>`);
             const verseLines = Array.isArray(v.lines) ? v.lines : [v.lines];
             lines.push("<p>")
             lines.push(verseLines.join("<br />"));
@@ -600,10 +694,11 @@ function showSong(bookId, songId) {
         });
     }
 
+    if (song.has_amen) lines.push("<p style=\"text-align:center\"><em>Amena</em></p>");
     if (song.footnote) {
-        lines.push(`<div id=\"footnote\">${song.footnote}</div>`);
+        lines.push("<hr>")
+        lines.push(`<div class=\"note\" id=\"footnote\">${song.footnote}</div>`);
     }
-
     currentContentHtml = lines.join("\n");
     renderContent(currentContentHtml);
 
@@ -679,6 +774,8 @@ function showContent(titleId) {
         showSong(currentScopeBookId, titleId);
     } else if (isSalamoBook(book)) {
         showSalamoContent(titleId);
+    } else if (isLitPBook(book)) {
+        showLitPSectionContent(currentScopeBookId, titleId);
     } else {
         // legacy placeholder for other books
         removeFloatingToggle();
@@ -858,7 +955,8 @@ function showAbout() {
         container.innerHTML = `
         <h2>Boky Fivavahana Anglikana</h2>
         <p>Voninahitra ho an'Andriamanitra irery ihany.</p>
-        <p>Raha misy olana na fanamarihana: <a href="mailto:tsiorymanana7@gmail.com">tsiorymanana7@gmail.com</a> / +261347048504</p>
+        <p>Raha misy olana na fanamarihana:
+        <a href="mailto:tsiorymanana7@gmail.com">tsiorymanana7@gmail.com</a> / +261347048504</p>
         <p>Mampiasà finaritra.</p>
         `;
     }
