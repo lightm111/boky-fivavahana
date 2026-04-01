@@ -327,10 +327,10 @@
         {
           "verse_number": 2,
           "lines": [
-            "He azoko (2x) ny satroboninahitra nomeny",
-            "satroboninahitr'aho.",
-            "satroboninahitra volamena (2x)",
-            "satroboninahitra fandresena (2x)"
+            "He azoko (2x) ny satroboninahitra",
+            "nomeny satroboninahitr'aho. satroboninahitra",
+            "volamena (2x) satroboninahitra",
+            "fandresena (2x)"
           ]
         },
         {
@@ -338,30 +338,20 @@
           "lines": [
             "He azoko (2x) azoko ny hira tsara",
             "hiran'ny anjely sy arkanjely",
-            "hiran'ireo tafita sy afak'ady"
-          ]
-        }
-      ],
-      "chorus": null
-    },
-    {
-      "section": "FIDERANA, FISAORANA SY FITSAOHANA",
-      "id": 15,
-      "title": "HIRA",
-      "verses": [
-        {
-          "verse_number": 1,
-          "lines": [
-            "Amena (2x) hira mifamaly hoe mifalia (2x)",
-            "Amena (2x) ka hira vaovao no hiraiko"
+            "hiran'ireo tafita sy afak'ady",
+            "Amena (2x) hira mifamaly hoe",
+            "mifalia (2x) Amena (2x)",
+            "ka hira vaovao no hiraiko"
           ]
         },
         {
-          "verse_number": 2,
+          "verse_number": 4,
           "lines": [
-            "He azoko (2x) azoko ilay tanàna Jerosalema",
-            "tanàna masina ka voaomana hampakarina",
-            "Jerosalema tanàna honenako amin'ny Tompoko",
+            "He azoko (2x) azoko ilay tanàna ",
+            "Jerosalema tanàna masina",
+            "ka voaomana hampakarina",
+            "Jerosalema tanàna honenako",
+            "amin'ny Tompoko",
             "Jerosalema honenako ho mandrakizay"
           ]
         }
@@ -502,8 +492,13 @@
             "Ny fiangonanay tratry Izao fotoana izao",
             "Ka hisaorana lanao",
             "Asandrato re ny feo fiderana",
-            "Redony koa, Halelofia, Halelofia",
-            "Amena, Halelofia, Halelofia",
+            "Redony koa, Haleloia, Haleloia",
+            "Amena, Haleloia, Haleloia"
+          ]
+        },
+        {
+          "verse_number": 2,
+          "lines": [
             "Ny fiangonanay omeo fo madio",
             "Fahendrena avy aminao",
             "Mba ho reherehanao (Tahio)",
@@ -511,8 +506,8 @@
             "Ka hitory ny teninao",
             "Mba ho voninahitrao",
             "Asandrato re ny feo fiderana",
-            "Venteso koa ny Halelofia, Halelofia",
-            "Amena, redony re Halelofia"
+            "Venteso koa ny Haleloia, Haleloia",
+            "Amena, redony re Haleloia"
           ]
         }
       ],
@@ -1304,7 +1299,7 @@
     {
       "section": "FIDERANA, FISAORANA SY FITSAOHANA",
       "id": 48,
-      "title": "NOHO NY RATRANÃO",
+      "title": "NOHO NY RATRANAO",
       "verses": [
         {
           "verse_number": 1,
@@ -1487,7 +1482,7 @@
           "lines": [
             "Rehefa misaina ny fitiavan'i Jesoa aho",
             "Sy izay rehetra nataony tamiko",
-            "Te-hiantso mafy aho hoe Halelofia",
+            "Te-hiantso mafy aho hoe Haleloia",
             "Hisaorako Azy ny fitiavany",
             "fiadanany....famonjeny",
             "fahasoavany....hatsarany"
@@ -1590,7 +1585,7 @@
         {
           "verse_number": 1,
           "lines": [
-            "Tompo ô, 'Zay nanao ny lanitra sy ny tany tamin-keri lehibe",
+            "Tompo ô, 'Zay nanao ny lanitra sy ny tany tamin-kery lehibe",
             "Tompo ô, 'Zay nanao ny lanitra sy ny tany tamin'ny sandrinao",
             "Tsy misy, zava-tsarotra aminao (2x)",
             "Lehibe, mahery, hendry sy mahery indrindra",
@@ -2147,7 +2142,12 @@
       "verses": [
         {
           "verse_number": 1,
-          "lines": ["Rainay ô, ô Ndreto ny olonao", "Miomana. Hiaraka aminao"]
+          "lines": [
+            "Rainay ô, ô",
+            "Ndreto ny olonao",
+            "Miomana",
+            "Hiaraka aminao"
+          ]
         },
         {
           "verse_number": 2,
@@ -2554,14 +2554,16 @@
           "verse_number": 2,
           "lines": [
             "Velona i Jesoa",
-            "Tamy nitsanganan'i Jesoa tamin'ny maty",
+            "Tamy nitsanganan'i",
+            "Jesoa tamin'ny maty",
             "No nanirahan'ireo mpianany"
           ]
         },
         {
           "verse_number": 3,
           "lines": [
-            "Mandehana ianareo amin'izao tontolo izao",
+            "Mandehana ianareo",
+            "amin'izao tontolo izao",
             "Lazao ireo lazai ko ireo"
           ]
         }
@@ -2796,14 +2798,19 @@
           "verse_number": 1,
           "lines": [
             "Hanome saina anao (x3)",
-            "Sy hampianatra izay lalan-kalehanao Aho",
+            "Sy hampianatra izay lalan-kalehanao Aho"
+          ]
+        },
+        {
+          "verse_number": 2,
+          "lines": [
             "Hitsinjo anao ny masoko (x2)",
             "Ka hanolo-tsaina anao",
             "Hanolo-tsaina anao Aho"
           ]
         },
         {
-          "verse_number": 2,
+          "verse_number": 3,
           "lines": [
             "Hanome saina anao",
             "Sy hampianatra anao",
@@ -2812,7 +2819,7 @@
           ]
         },
         {
-          "verse_number": 3,
+          "verse_number": 4,
           "lines": [
             "Hitsinjo anao ny masoko",
             "Ka hanolo-tsaina",
@@ -2820,7 +2827,7 @@
           ]
         },
         {
-          "verse_number": 4,
+          "verse_number": 5,
           "lines": [
             "Misaotra anao aho ry Ray (x2)",
             "Fa nomenao saina kinga sy mahay"
@@ -2844,8 +2851,7 @@
             "Tamin'ny rany",
             "Ho Azy anie ny voninahitra",
             "Sy ny fanjakana",
-            "Mandrakizay",
-            "Amena ! (2)"
+            "Mandrakizay Amena ! (2)"
           ]
         }
       ],
@@ -3003,7 +3009,7 @@
             "\"T\" ampiana \"E\" manao hoe \"TE\"",
             "\"N\" ampiana \"E\" manao hoe \"NE\"",
             "\"N\" ampiana \"A\" manao hoe \"NA\"",
-            "\"Reo rehetra ireo hatambatra",
+            "'Reo rehetra ireo hatambatra",
             "Dia manao hoe: mitenena",
             "Mitenena Jehovah ô",
             "Fa mihaino ny mpanomponao"
@@ -3098,11 +3104,7 @@
             "Tompo ô ! malalanay",
             "Indreto izahay",
             "Vonona hianatra",
-            "Ny Teny Masinao",
-            "Hampahirato ny masonay",
-            "Jesoa malala ô !",
-            "Hahita zava-mahagaga",
-            "Ao amin'ny Teninao"
+            "Ny Teny Masinao"
           ]
         },
         {
