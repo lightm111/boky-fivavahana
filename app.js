@@ -1,22 +1,23 @@
-let books, chapters, titles, contents;
+let books;
 let hiraSongs = [];
 let haaSongs = [];
 let salamoPsalms = [];
 let litpContents = [];
+let litbfContents = [];
 let navigationStack = [];
 let currentView = null;
 let searchResults = [];
 let currentScopeBookId = null; // book id for section-scoped search
 let globalSearchOutsideHandler = null;
 let navOutsideHandler = null;
-let currentBookViewMode = "chapters"; // "chapters" or "pages" for special books
 let currentFontSize = 100; // percentage, default 100%
 let currentContentHtml = null; // Store original HTML content for zoom scaling
 let currentTitleIndex = -1; // Track current title index for prev/next navigation
 let currentTitlesList = []; // Store current list of titles for prev/next navigation
+let currentLitBFSectionName = null; // Current section open for LitBF subsection navigation
 let autoScrollInterval = null;
 let autoScrolling = false;
-const AUTO_SCROLL_SPEED = 10; // px per second
+const AUTO_SCROLL_SPEED = 8; // px per second
 const specialBooks = ["Fihirana", "Salamo", "Hanandratra Anao Aho"];
 
 // Load saved font size on page load
@@ -36,11 +37,7 @@ async function loadData() {
     haaSongs = await fetch("data/HAA.json").then(r => r.json()).then(d => d.songs || []);
     salamoPsalms = await fetch("data/SALAMO.json").then(r => r.json()).then(d => d.psalms || []);
     litpContents = await fetch("data/LitP.json").then(r => r.json()).then(d => d.contents || []);
-
-    // old data intentionally ignored for now.
-    chapters = [];
-    titles = [];
-    contents = [];
+    litbfContents = await fetch("data/LitBF.json").then(r => r.json()).then(d => d.sections || []);
 
     setupSearch();
     showBooks();
@@ -408,11 +405,16 @@ function isLitPBook(book) {
     return book && book.name === "Litorjia Provinsialy";
 }
 
+function isLitBFBook(book) {
+    return book && book.name === "Litorjia Boky Fivavahana";
+}
+
 function getBookData(book) {
     if (isHiraBook(book)) return hiraSongs;
     if (isHaaBook(book)) return haaSongs;
     if (isSalamoBook(book)) return salamoPsalms;
     if (isLitPBook(book)) return litpContents;
+    if (isLitBFBook(book)) return litbfContents;
     return null;
 }
 
@@ -420,7 +422,6 @@ function showSections(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
 
-    currentBookViewMode = "sections";
     currentView = () => showSections(bookId);
     updateHeader(book.name);
 
@@ -444,6 +445,11 @@ function showSections(bookId) {
 
     if (isLitPBook(book)) {
         showLitPSections(bookId);
+        return;
+    }
+
+    if (isLitBFBook(book)) {
+        showLitBFSections(bookId);
         return;
     }
 
@@ -533,87 +539,6 @@ function showGroupedSongsView(bookId) {
     renderToggleButton(bookId, "sections");
 }
 
-function showLitPSections(bookId) {
-    const book = books.find(b => b.id == bookId);
-    if (!book) return;
-
-    currentView = () => showLitPSections(bookId);
-    updateHeader(book.name);
-    removeFloatingToggle();
-
-    currentScopeBookId = bookId;
-    const sectionContainer = document.getElementById("sectionSearchContainer");
-    if (sectionContainer) sectionContainer.style.display = "none";
-
-    const container = document.getElementById("content");
-    container.innerHTML = "";
-
-    const sections = litpContents
-        .map(sectionObj => sectionObj.section)
-        .filter((s, i, arr) => s && arr.indexOf(s) === i);
-
-    if (sections.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "item";
-        empty.innerText = "Tsy misy fizarana hita ao amin'ny Litorjia Provinsialy.";
-        container.appendChild(empty);
-        return;
-    }
-
-    sections.forEach(section => {
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerText = section;
-        div.onclick = () => {
-            navigationStack.push(() => showLitPSections(bookId));
-            showLitPSectionContent(bookId, section);
-        };
-        container.appendChild(div);
-    });
-}
-
-function showLitPSectionContent(bookId, sectionName) {
-    const book = books.find(b => b.id == bookId);
-    if (!book) return;
-
-    const sectionObj = litpContents.find(s => s.section === sectionName);
-    if (!sectionObj) return;
-
-    currentView = () => showLitPSectionContent(bookId, sectionName);
-    updateHeader(sectionName, book.name);
-    removeFloatingToggle();
-
-    currentScopeBookId = bookId;
-    const sectionContainer = document.getElementById("sectionSearchContainer");
-    if (sectionContainer) sectionContainer.style.display = "none";
-
-    const container = document.getElementById("content");
-    container.innerHTML = "";
-
-    let html = "";
-    sectionObj.items
-        .sort((a, b) => Number(a.id) - Number(b.id))
-        .forEach(item => {
-            html += `<p class="lit"><span style="display: inline-block; width: 2rem">
-            <strong>${item.id}-</strong></span>${item.content.slice(3)}`;
-        });
-
-    container.innerHTML = html.replace(
-        /<br\s*\/?>/g,
-        '<br><span style="margin-left:2rem; display:inline-block;"></span>'
-    );
-
-    currentContentHtml = html;
-    // Set up prev/next navigation for sections
-    const sections = litpContents
-        .map(sectionObj => sectionObj.section)
-        .filter((s, i, arr) => s && arr.indexOf(s) === i);
-    currentTitlesList = sections.map(s => ({ id: s }));
-    currentTitleIndex = sections.indexOf(sectionName);
-
-    updateBottomNav();
-}
-
 function showFlatSongsView(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
@@ -654,6 +579,7 @@ function showSong(bookId, songId) {
     const source = getBookData(book) || [];
     const song = source.find(item => item.id == songId);
     if (!song) return;
+    removeFloatingToggle();
 
     const bookTitle = book ? book.name : "";
     currentView = () => showSong(bookId, songId);
@@ -776,6 +702,12 @@ function showContent(titleId) {
         showSalamoContent(titleId);
     } else if (isLitPBook(book)) {
         showLitPSectionContent(currentScopeBookId, titleId);
+    } else if (isLitBFBook(book)) {
+        if (currentLitBFSectionName) {
+            showLitBFSubsectionContent(currentScopeBookId, currentLitBFSectionName, Number(titleId));
+        } else {
+            showLitBFSectionContent(currentScopeBookId, titleId);
+        }
     } else {
         // legacy placeholder for other books
         removeFloatingToggle();
@@ -792,6 +724,204 @@ function showContent(titleId) {
         currentTitleIndex = -1;
         updateBottomNav();
     }
+}
+
+function showLitPSections(bookId) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    currentView = () => showLitPSections(bookId);
+    updateHeader(book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    const sections = litpContents
+        .map(sectionObj => sectionObj.section)
+        .filter((s, i, arr) => s && arr.indexOf(s) === i);
+
+    if (sections.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "item";
+        empty.innerText = "Tsy misy fizarana hita ao amin'ny Litorjia Provinsialy.";
+        container.appendChild(empty);
+        return;
+    }
+
+    sections.forEach(section => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerText = section;
+        div.onclick = () => {
+            navigationStack.push(() => showLitPSections(bookId));
+            showLitPSectionContent(bookId, section);
+        };
+        container.appendChild(div);
+    });
+}
+
+function showLitBFSections(bookId) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    currentView = () => showLitBFSections(bookId);
+    updateHeader(book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    currentLitBFSectionName = null;
+
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    const sections = litbfContents.map(sectionObj => sectionObj.section);
+
+    if (sections.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "item";
+        empty.innerText = "Tsy misy fizarana hita ao amin'ny Litorjia Boky Fivavahana.";
+        container.appendChild(empty);
+        return;
+    }
+
+    sections.forEach(section => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerText = section;
+        div.onclick = () => {
+            navigationStack.push(() => showLitBFSections(bookId));
+            showLitBFSectionContent(bookId, section);
+        };
+        container.appendChild(div);
+    });
+}
+
+function showLitPSectionContent(bookId, sectionName) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    const sectionObj = litpContents.find(s => s.section === sectionName);
+    if (!sectionObj) return;
+
+    currentView = () => showLitPSectionContent(bookId, sectionName);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    let html = "";
+    sectionObj.items
+        .sort((a, b) => Number(a.id) - Number(b.id))
+        .forEach(item => {
+            html += `<p class="lit"><span style="display: inline-block; width: 2rem">
+            <strong>${item.id}-</strong></span>${item.content.slice(3)}`;
+        });
+
+    container.innerHTML = html.replace(
+        /<br\s*\/?>/g,
+        '<br><span style="margin-left:2rem; display:inline-block;"></span>'
+    );
+
+    currentContentHtml = html;
+    // Set up prev/next navigation for sections
+    const sections = litpContents
+        .map(sectionObj => sectionObj.section)
+        .filter((s, i, arr) => s && arr.indexOf(s) === i);
+    currentTitlesList = sections.map(s => ({ id: s }));
+    currentTitleIndex = sections.indexOf(sectionName);
+
+    updateBottomNav();
+}
+
+function showLitBFSectionContent(bookId, sectionName) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    const sectionObj = litbfContents.find(s => s.section === sectionName);
+    if (!sectionObj) return;
+
+    currentView = () => showLitBFSectionContent(bookId, sectionName);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    // Display main content
+    if (sectionObj.content) {
+        const mainDiv = document.createElement("div");
+        mainDiv.innerHTML = sectionObj.content;
+        container.appendChild(mainDiv);
+    }
+
+    if (sectionObj.subsections && sectionObj.subsections.length > 0) {
+        sectionObj.subsections.forEach((sub, idx) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "item";
+            itemDiv.innerText = sub.subsection;
+            itemDiv.onclick = () => {
+                navigationStack.push(() => showLitBFSectionContent(bookId, sectionName));
+                showLitBFSubsectionContent(bookId, sectionName, idx);
+            };
+            container.appendChild(itemDiv);
+        });
+
+        currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
+        currentTitleIndex = -1; // not currently on a subsection
+        currentContentHtml = null;
+    } else {
+        currentTitlesList = litbfContents.map((s, idx) => ({ id: idx }));
+        currentTitleIndex = litbfContents.findIndex(s => s.section === sectionName);
+        currentContentHtml = sectionObj.content || null;
+        renderContent(currentContentHtml);
+    }
+
+    updateBottomNav();
+}
+
+
+
+function showLitBFSubsectionContent(bookId, sectionName, subsectionIndex) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+
+    const sectionObj = litbfContents.find(s => s.section === sectionName);
+    if (!sectionObj || !sectionObj.subsections) return;
+    const sub = sectionObj.subsections[subsectionIndex];
+    if (!sub) return;
+
+    currentLitBFSectionName = sectionName;
+    currentView = () => showLitBFSubsectionContent(bookId, sectionName, subsectionIndex);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    currentContentHtml = sub.content;
+    currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
+    currentTitleIndex = subsectionIndex;
+
+    renderContent(sub.content);
+    updateBottomNav();
 }
 
 function toggleMenu() {
@@ -889,20 +1019,17 @@ function startAutoScroll() {
     if (btn) btn.classList.add("scrolling");
     if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
 
-    // Use rAF for smooth, reliable scrolling on Android WebView
+    // Sub-pixel scrollTop for perfectly smooth, jank-free scrolling
     let lastTime = null;
-    let accumulated = 0; // fractional pixel accumulator
+    let scrollPos = window.scrollY; // track as float so every frame advances exactly
 
     function rafScroll(timestamp) {
         if (!autoScrolling) return;
         if (lastTime !== null) {
-            const delta = timestamp - lastTime; // ms since last frame
-            accumulated += AUTO_SCROLL_SPEED * delta / 1000; // px/s → px this frame
-            const pixels = Math.floor(accumulated);
-            if (pixels >= 1) {
-                window.scrollBy(0, pixels);
-                accumulated -= pixels;
-            }
+            const delta = timestamp - lastTime;
+            scrollPos += AUTO_SCROLL_SPEED * delta / 1000;
+            document.documentElement.scrollTop = scrollPos;
+            document.body.scrollTop = scrollPos; // iOS Safari fallback
         }
         lastTime = timestamp;
         const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;

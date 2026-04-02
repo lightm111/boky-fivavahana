@@ -25,6 +25,18 @@ header {
   font-size: 18px;
 }
 
+.title {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0.4rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
 .lit {
   text-align: justify;
 }
