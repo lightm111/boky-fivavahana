@@ -20,7 +20,6 @@ let currentSearchContext = null; // Track search context: book, section-list, su
 let autoScrollInterval = null;
 let autoScrolling = false;
 const AUTO_SCROLL_SPEED = 8; // px per second
-const specialBooks = ["Fihirana", "Salamo", "Hanandratra Anao Aho"];
 
 // Load saved font size on page load
 async function loadFontSize() {
@@ -80,6 +79,7 @@ function updateBottomNav() {
     if (nextBtn) nextBtn.disabled = !inLyrics || currentTitleIndex >= currentTitlesList.length - 1;
 }
 
+// Prev/next buttons
 function navigatePrev() {
     stopAutoScroll();
     if (currentTitleIndex > 0) {
@@ -94,26 +94,7 @@ function navigateNext() {
     }
 }
 
-function focusSearch() {
-    // If section search is visible, focus it; otherwise open/focus global search
-    const sectionContainer = document.getElementById("sectionSearchContainer");
-    const sectionField = document.getElementById("sectionSearchField");
-    if (sectionContainer && sectionContainer.style.display !== "none" && sectionField) {
-        sectionField.focus();
-        sectionField.scrollIntoView({ behavior: "instant", block: "nearest" });
-        return;
-    }
-    // Otherwise open global search if not already visible, then focus
-    const globalContainer = document.getElementById("globalSearchContainer");
-    if (globalContainer && globalContainer.style.display === "none") {
-        toggleGlobalSearch();
-    } else {
-        const globalField = document.getElementById("globalSearchField");
-        if (globalField) globalField.focus();
-    }
-}
-
-// NEW helper: remove any floating toggle button
+// Remove any floating toggle button
 function removeFloatingToggle() {
     const btn = document.getElementById("floatingToggleBtn");
     if (btn) btn.style.display = "none";
@@ -134,6 +115,160 @@ function renderToggleButton(bookId, currentMode) {
     }
 }
 
+// Navigation menu
+function toggleMenu() {
+    const menu = document.getElementById("navMenu");
+    const menuBtn = document.getElementById("bnav-menu");
+    if (!menu) return;
+    const shown = menu.style.display !== "none";
+    if (shown) {
+        menu.style.display = "none";
+        if (navOutsideHandler) {
+            document.removeEventListener("mousedown", navOutsideHandler);
+            navOutsideHandler = null;
+        }
+    } else {
+        menu.style.display = "block";
+        // attach outside click handler
+        navOutsideHandler = function (e) {
+            const target = e.target;
+            if (!menu.contains(target) && target !== menuBtn && !menuBtn.contains(target)) {
+                menu.style.display = "none";
+                if (navOutsideHandler) {
+                    document.removeEventListener("mousedown", navOutsideHandler);
+                    navOutsideHandler = null;
+                }
+            }
+        };
+        document.addEventListener("mousedown", navOutsideHandler);
+    }
+}
+
+function navigateToBook(bookName) {
+    const navMenu = document.getElementById("navMenu");
+    if (navMenu) navMenu.style.display = "none";
+    if (navOutsideHandler) {
+        document.removeEventListener("mousedown", navOutsideHandler);
+        navOutsideHandler = null;
+    }
+    const g = document.getElementById("globalSearchField");
+    const s = document.getElementById("sectionSearchField");
+    if (g) g.value = "";
+    if (s) s.value = "";
+    searchResults = [];
+
+    const book = books.find(b => b.name === bookName);
+    if (book) {
+        navigationStack = [showBooks];
+        showSections(book.id);
+    }
+}
+
+// Zooming functions
+function zoomIn() {
+    currentFontSize = Math.min(currentFontSize + 10, 150);
+    applyFontSize();
+    if (currentContentHtml) {
+        renderContent(currentContentHtml);
+    }
+}
+
+function zoomOut() {
+    currentFontSize = Math.max(currentFontSize - 10, 80);
+    applyFontSize();
+    if (currentContentHtml) {
+        renderContent(currentContentHtml);
+    }
+}
+
+function applyFontSize() {
+    const root = document.documentElement;
+    root.style.fontSize = (16 * (currentFontSize / 100)) + "px";
+    localStorage.setItem("fontSizePercentage", currentFontSize);
+}
+
+// Autoscrolling
+function stopAutoScroll(e) {
+    // If the touch was on the scroll button, let toggleAutoScroll handle it
+    if (e) {
+        const btn = document.getElementById("autoScrollBtn");
+        if (btn && btn.contains(e.target)) return;
+    }
+    autoScrolling = false;
+    if (autoScrollInterval) {
+        cancelAnimationFrame(autoScrollInterval);
+        autoScrollInterval = null;
+    }
+    const btn = document.getElementById("autoScrollBtn");
+    const icon = document.getElementById("autoScrollIcon");
+    if (btn) btn.classList.remove("scrolling");
+    if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    document.removeEventListener("touchstart", stopAutoScroll);
+}
+
+function startAutoScroll() {
+    autoScrolling = true;
+    const btn = document.getElementById("autoScrollBtn");
+    const icon = document.getElementById("autoScrollIcon");
+    if (btn) btn.classList.add("scrolling");
+    if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+
+    // Sub-pixel scrollTop for perfectly smooth, jank-free scrolling
+    let lastTime = null;
+    let scrollPos = window.scrollY; // track as float so every frame advances exactly
+
+    function rafScroll(timestamp) {
+        if (!autoScrolling) return;
+        if (lastTime !== null) {
+            const delta = timestamp - lastTime;
+            scrollPos += AUTO_SCROLL_SPEED * delta / 1000;
+            document.documentElement.scrollTop = scrollPos;
+            document.body.scrollTop = scrollPos; // iOS Safari fallback
+        }
+        lastTime = timestamp;
+        const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
+        if (atBottom) {
+            stopAutoScroll();
+        } else {
+            autoScrollInterval = requestAnimationFrame(rafScroll);
+        }
+    }
+    autoScrollInterval = requestAnimationFrame(rafScroll);
+
+    // Stop on manual touch — delay so the starting tap doesn't immediately cancel
+    setTimeout(() => {
+        document.addEventListener("touchstart", stopAutoScroll, { passive: true });
+    }, 300);
+}
+
+function toggleAutoScroll() {
+    if (autoScrolling) {
+        stopAutoScroll();
+    } else {
+        startAutoScroll();
+    }
+}
+
+// Search
+function focusSearch() {
+    // If section search is visible, focus it; otherwise open/focus global search
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    const sectionField = document.getElementById("sectionSearchField");
+    if (sectionContainer && sectionContainer.style.display !== "none" && sectionField) {
+        sectionField.focus();
+        sectionField.scrollIntoView({ behavior: "instant", block: "nearest" });
+        return;
+    }
+    // Otherwise open global search if not already visible, then focus
+    const globalContainer = document.getElementById("globalSearchContainer");
+    if (globalContainer && globalContainer.style.display === "none") {
+        toggleGlobalSearch();
+    } else {
+        const globalField = document.getElementById("globalSearchField");
+        if (globalField) globalField.focus();
+    }
+}
+
 function setupSearch() {
     const globalField = document.getElementById("globalSearchField");
     const sectionField = document.getElementById("sectionSearchField");
@@ -143,7 +278,7 @@ function setupSearch() {
             const query = e.target.value.toLowerCase().trim();
             if (query === "") {
                 searchResults = [];
-                restoreCurrentView();
+                if (currentView) currentView();
             } else {
                 performSearch(query);
             }
@@ -161,7 +296,7 @@ function setupSearch() {
             const query = e.target.value.toLowerCase().trim();
             if (query === "") {
                 searchResults = [];
-                restoreCurrentView();
+                if (currentView) currentView();
             } else {
                 performSearch(query, currentScopeBookId);
             }
@@ -381,18 +516,14 @@ function showSearchResults() {
     });
 }
 
-function restoreCurrentView() {
-    if (currentView) {
-        currentView();
-    }
-}
-
+// Update the header title
 function updateHeader(title, subtitle = "") {
     document.getElementById("headerTitle").innerText = title;
     document.getElementById("headerSubtitle").innerText = subtitle;
     updateBottomNav();
 }
 
+// Back button helper
 function goBack() {
     stopAutoScroll();
     const autoBtn = document.getElementById("autoScrollBtn");
@@ -412,6 +543,7 @@ function goBack() {
     if (previous) previous();
 }
 
+// Navigation steps
 function showBooks() {
     removeFloatingToggle();
 
@@ -437,14 +569,6 @@ function showBooks() {
             };
             container.appendChild(div);
         });
-
-    // If no special books are present, display a placeholder message.
-    if (container.children.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "item";
-        empty.innerText = "Tsy mbola misy boky azo vakiana ankehitriny.";
-        container.appendChild(empty);
-    }
 }
 
 function bookIs(book, name) { return book && book.name === name; }
@@ -512,6 +636,106 @@ function showSections(bookId) {
     });
 }
 
+function showContent(titleId) {
+    const book = books.find(b => b.id == currentScopeBookId);
+    if (!book) return;
+
+    if (isHiraBook(book) || isHaaBook(book)) {
+        showSong(currentScopeBookId, titleId);
+    } else if (isSalamoBook(book)) {
+        showSalamoContent(titleId);
+    } else if (isLitPBook(book)) {
+        showLitPSectionContent(currentScopeBookId, titleId);
+    } else {
+        if (currentSectionName) {
+            showSubsectionContent(currentScopeBookId, currentSectionName, Number(titleId));
+        } else {
+            showSectionContent(currentScopeBookId, titleId);
+        }
+    }
+}
+
+function showSectionContent(bookId, sectionName) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+    const contents = getBookData(book);
+
+    const sectionObj = contents.find(s => s.section === sectionName);
+    if (!sectionObj) return;
+
+    currentView = () => showSectionContent(bookId, sectionName);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+
+    // Display main content
+    if (sectionObj.content) {
+        const mainDiv = document.createElement("div");
+        mainDiv.innerHTML = sectionObj.content;
+        container.appendChild(mainDiv);
+    }
+
+    if (sectionObj.subsections && sectionObj.subsections.length > 0) {
+        sectionObj.subsections.forEach((sub, idx) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "item";
+            itemDiv.innerText = sub.subsection;
+            itemDiv.onclick = () => {
+                navigationStack.push(() => showSectionContent(bookId, sectionName));
+                showSubsectionContent(bookId, sectionName, idx);
+            };
+            container.appendChild(itemDiv);
+        });
+
+        currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
+        currentTitleIndex = -1; // not currently on a subsection
+        currentContentHtml = null;
+    } else {
+        currentTitlesList = contents.map((s, idx) => ({ id: idx }));
+        currentTitleIndex = contents.findIndex(s => s.section === sectionName);
+        currentContentHtml = sectionObj.content || null;
+        renderContent(currentContentHtml);
+    }
+
+    updateBottomNav();
+}
+
+function showSubsectionContent(bookId, sectionName, subsectionIndex) {
+    const book = books.find(b => b.id == bookId);
+    if (!book) return;
+    const contents = getBookData(book);
+
+    const sectionObj = contents.find(s => s.section === sectionName);
+    if (!sectionObj || !sectionObj.subsections) return;
+    const sub = sectionObj.subsections[subsectionIndex];
+    if (!sub) return;
+
+    currentSectionName = sectionName;
+    currentView = () => showSubsectionContent(bookId, sectionName, subsectionIndex);
+    updateHeader(sectionName, book.name);
+    removeFloatingToggle();
+
+    currentScopeBookId = bookId;
+    const sectionContainer = document.getElementById("sectionSearchContainer");
+    if (sectionContainer) sectionContainer.style.display = "none";
+
+    currentContentHtml = isLHFBook(book)
+        ? `<h2 class="title">${sub.subsection}</h2>` + sub.content
+        : sub.content;
+    currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
+    currentTitleIndex = subsectionIndex;
+
+    renderContent(currentContentHtml);
+    updateBottomNav();
+}
+
+// For Fihirana/HAA Books
 function showGroupedSongsView(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
@@ -685,6 +909,7 @@ function showSong(bookId, songId) {
     updateBottomNav();
 }
 
+// For Salamo book
 function showSalamoList(bookId) {
     const book = books.find(b => b.id == bookId);
     currentView = () => showSalamoList(bookId);
@@ -741,26 +966,7 @@ function showSalamoContent(psalmId) {
     updateBottomNav();
 }
 
-
-function showContent(titleId) {
-    const book = books.find(b => b.id == currentScopeBookId);
-    if (!book) return;
-
-    if (isHiraBook(book) || isHaaBook(book)) {
-        showSong(currentScopeBookId, titleId);
-    } else if (isSalamoBook(book)) {
-        showSalamoContent(titleId);
-    } else if (isLitPBook(book)) {
-        showLitPSectionContent(currentScopeBookId, titleId);
-    } else {
-        if (currentSectionName) {
-            showSubsectionContent(currentScopeBookId, currentSectionName, Number(titleId));
-        } else {
-            showSectionContent(currentScopeBookId, titleId);
-        }
-    }
-}
-
+// For Litorjia Provinsialy book
 function showLitPSections(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
@@ -842,220 +1048,6 @@ function showLitPSectionContent(bookId, sectionName) {
 
     updateBottomNav();
 }
-
-function showSectionContent(bookId, sectionName) {
-    const book = books.find(b => b.id == bookId);
-    if (!book) return;
-    const contents = getBookData(book);
-
-    const sectionObj = contents.find(s => s.section === sectionName);
-    if (!sectionObj) return;
-
-    currentView = () => showSectionContent(bookId, sectionName);
-    updateHeader(sectionName, book.name);
-    removeFloatingToggle();
-
-    currentScopeBookId = bookId;
-    const sectionContainer = document.getElementById("sectionSearchContainer");
-    if (sectionContainer) sectionContainer.style.display = "none";
-
-    const container = document.getElementById("content");
-    container.innerHTML = "";
-
-    // Display main content
-    if (sectionObj.content) {
-        const mainDiv = document.createElement("div");
-        mainDiv.innerHTML = sectionObj.content;
-        container.appendChild(mainDiv);
-    }
-
-    if (sectionObj.subsections && sectionObj.subsections.length > 0) {
-        sectionObj.subsections.forEach((sub, idx) => {
-            const itemDiv = document.createElement("div");
-            itemDiv.className = "item";
-            itemDiv.innerText = sub.subsection;
-            itemDiv.onclick = () => {
-                navigationStack.push(() => showSectionContent(bookId, sectionName));
-                showSubsectionContent(bookId, sectionName, idx);
-            };
-            container.appendChild(itemDiv);
-        });
-
-        currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
-        currentTitleIndex = -1; // not currently on a subsection
-        currentContentHtml = null;
-    } else {
-        currentTitlesList = contents.map((s, idx) => ({ id: idx }));
-        currentTitleIndex = contents.findIndex(s => s.section === sectionName);
-        currentContentHtml = sectionObj.content || null;
-        renderContent(currentContentHtml);
-    }
-
-    updateBottomNav();
-}
-
-
-
-function showSubsectionContent(bookId, sectionName, subsectionIndex) {
-    const book = books.find(b => b.id == bookId);
-    if (!book) return;
-    const contents = getBookData(book);
-
-    const sectionObj = contents.find(s => s.section === sectionName);
-    if (!sectionObj || !sectionObj.subsections) return;
-    const sub = sectionObj.subsections[subsectionIndex];
-    if (!sub) return;
-
-    currentSectionName = sectionName;
-    currentView = () => showSubsectionContent(bookId, sectionName, subsectionIndex);
-    updateHeader(sectionName, book.name);
-    removeFloatingToggle();
-
-    currentScopeBookId = bookId;
-    const sectionContainer = document.getElementById("sectionSearchContainer");
-    if (sectionContainer) sectionContainer.style.display = "none";
-
-    currentContentHtml = isLHFBook(book)
-        ? `<h2 class="title">${sub.subsection}</h2>` + sub.content
-        : sub.content;
-    currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
-    currentTitleIndex = subsectionIndex;
-
-    renderContent(currentContentHtml);
-    updateBottomNav();
-}
-
-function toggleMenu() {
-    const menu = document.getElementById("navMenu");
-    const menuBtn = document.getElementById("bnav-menu");
-    if (!menu) return;
-    const shown = menu.style.display !== "none";
-    if (shown) {
-        menu.style.display = "none";
-        if (navOutsideHandler) {
-            document.removeEventListener("mousedown", navOutsideHandler);
-            navOutsideHandler = null;
-        }
-    } else {
-        menu.style.display = "block";
-        // attach outside click handler
-        navOutsideHandler = function (e) {
-            const target = e.target;
-            if (!menu.contains(target) && target !== menuBtn && !menuBtn.contains(target)) {
-                menu.style.display = "none";
-                if (navOutsideHandler) {
-                    document.removeEventListener("mousedown", navOutsideHandler);
-                    navOutsideHandler = null;
-                }
-            }
-        };
-        document.addEventListener("mousedown", navOutsideHandler);
-    }
-}
-
-function navigateToBook(bookName) {
-    const navMenu = document.getElementById("navMenu");
-    if (navMenu) navMenu.style.display = "none";
-    if (navOutsideHandler) {
-        document.removeEventListener("mousedown", navOutsideHandler);
-        navOutsideHandler = null;
-    }
-    const g = document.getElementById("globalSearchField");
-    const s = document.getElementById("sectionSearchField");
-    if (g) g.value = "";
-    if (s) s.value = "";
-    searchResults = [];
-
-    const book = books.find(b => b.name === bookName);
-    if (book) {
-        navigationStack = [showBooks];
-        showSections(book.id);
-    }
-}
-
-function zoomIn() {
-    currentFontSize = Math.min(currentFontSize + 10, 150);
-    applyFontSize();
-    if (currentContentHtml) {
-        renderContent(currentContentHtml);
-    }
-}
-
-function zoomOut() {
-    currentFontSize = Math.max(currentFontSize - 10, 80);
-    applyFontSize();
-    if (currentContentHtml) {
-        renderContent(currentContentHtml);
-    }
-}
-
-function applyFontSize() {
-    const root = document.documentElement;
-    root.style.fontSize = (16 * (currentFontSize / 100)) + "px";
-    localStorage.setItem("fontSizePercentage", currentFontSize);
-}
-
-function stopAutoScroll(e) {
-    // If the touch was on the scroll button, let toggleAutoScroll handle it
-    if (e) {
-        const btn = document.getElementById("autoScrollBtn");
-        if (btn && btn.contains(e.target)) return;
-    }
-    autoScrolling = false;
-    if (autoScrollInterval) {
-        cancelAnimationFrame(autoScrollInterval);
-        autoScrollInterval = null;
-    }
-    const btn = document.getElementById("autoScrollBtn");
-    const icon = document.getElementById("autoScrollIcon");
-    if (btn) btn.classList.remove("scrolling");
-    if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-    document.removeEventListener("touchstart", stopAutoScroll);
-}
-
-function startAutoScroll() {
-    autoScrolling = true;
-    const btn = document.getElementById("autoScrollBtn");
-    const icon = document.getElementById("autoScrollIcon");
-    if (btn) btn.classList.add("scrolling");
-    if (icon) icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-
-    // Sub-pixel scrollTop for perfectly smooth, jank-free scrolling
-    let lastTime = null;
-    let scrollPos = window.scrollY; // track as float so every frame advances exactly
-
-    function rafScroll(timestamp) {
-        if (!autoScrolling) return;
-        if (lastTime !== null) {
-            const delta = timestamp - lastTime;
-            scrollPos += AUTO_SCROLL_SPEED * delta / 1000;
-            document.documentElement.scrollTop = scrollPos;
-            document.body.scrollTop = scrollPos; // iOS Safari fallback
-        }
-        lastTime = timestamp;
-        const atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2;
-        if (atBottom) {
-            stopAutoScroll();
-        } else {
-            autoScrollInterval = requestAnimationFrame(rafScroll);
-        }
-    }
-    autoScrollInterval = requestAnimationFrame(rafScroll);
-
-    // Stop on manual touch — delay so the starting tap doesn't immediately cancel
-    setTimeout(() => {
-        document.addEventListener("touchstart", stopAutoScroll, { passive: true });
-    }, 300);
-}
-
-function toggleAutoScroll() {
-    if (autoScrolling) {
-        stopAutoScroll();
-    } else {
-        startAutoScroll();
-    }
-}
-
 
 function showAbout() {
     currentView = showAbout;
