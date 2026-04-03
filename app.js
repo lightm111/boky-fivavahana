@@ -123,7 +123,6 @@ function renderToggleButton(bookId, currentMode) {
     const btn = document.getElementById("floatingToggleBtn");
     if (!btn) return;
     btn.style.display = "flex";
-
     if (currentMode === "sections") {
         btn.innerText = "Ch";
         btn.title = "Switch to titles view";
@@ -220,9 +219,8 @@ function performSearch(query, scopeBookId = null) {
         return;
     }
 
-    // Determine effective scope
-    const scope = scopeBookId || currentScopeBookId;
-    const isGlobal = scope == null;
+    const isGlobal = scopeBookId == null;
+    const scope = scopeBookId;
     const scopedBook = scope ? books.find(b => b.id == scope) : null;
 
     const searchLitStyle = (bookName, contents, sectionType) => {
@@ -449,29 +447,13 @@ function showBooks() {
     }
 }
 
-function isHiraBook(book) {
-    return book && book.name === "Fihirana";
-}
-
-function isHaaBook(book) {
-    return book && book.name === "Hanandratra Anao Aho";
-}
-
-function isSalamoBook(book) {
-    return book && book.name === "Salamo";
-}
-
-function isLitPBook(book) {
-    return book && book.name === "Litorjia Provinsialy";
-}
-
-function isLitBFBook(book) {
-    return book && book.name === "Litorjia Boky Fivavahana";
-}
-
-function isLHFBook(book) {
-    return book && book.name === "Lalan'ny Hazo Fijaliana";
-}
+function bookIs(book, name) { return book && book.name === name; }
+function isHiraBook(book) { return bookIs(book, "Fihirana"); }
+function isHaaBook(book) { return bookIs(book, "Hanandratra Anao Aho"); }
+function isSalamoBook(book) { return bookIs(book, "Salamo"); }
+function isLitPBook(book) { return bookIs(book, "Litorjia Provinsialy"); }
+function isLitBFBook(book) { return bookIs(book, "Litorjia Boky Fivavahana"); }
+function isLHFBook(book) { return bookIs(book, "Lalan'ny Hazo Fijaliana"); }
 
 function getBookData(book) {
     if (isHiraBook(book)) return hiraSongs;
@@ -487,45 +469,28 @@ function showSections(bookId) {
     const book = books.find(b => b.id == bookId);
     if (!book) return;
 
+    // Common setup for all book types
+    currentScopeBookId = bookId;
+    currentSectionName = null;
     currentView = () => showSections(bookId);
     updateHeader(book.name);
+    removeFloatingToggle();
 
-    currentScopeBookId = bookId;
     const sectionContainer = document.getElementById("sectionSearchContainer");
     const sectionField = document.getElementById("sectionSearchField");
     if (sectionContainer) sectionContainer.style.display = "block";
     if (sectionField) sectionField.placeholder = `Hitady @${book.name}...`;
 
-    removeFloatingToggle();
-
-    if (isHiraBook(book) || isHaaBook(book)) {
-        showFlatSongsView(bookId);
-        return;
-    }
-
-    if (isSalamoBook(book)) {
-        showSalamoList(bookId);
-        return;
-    }
-
-    if (isLitPBook(book)) {
-        showLitPSections(bookId);
-        return;
-    }
-
-    currentView = () => showSections(bookId);
-    updateHeader(book.name);
-    removeFloatingToggle();
-
-    currentScopeBookId = bookId;
-    currentSectionName = null;
+    if (isHiraBook(book) || isHaaBook(book)) { showFlatSongsView(bookId); return; }
+    if (isSalamoBook(book)) { showSalamoList(bookId); return; }
+    if (isLitPBook(book)) { showLitPSections(bookId); return; }
 
     const container = document.getElementById("content");
     container.innerHTML = "";
 
-    const sections = isLitBFBook(book) ?
-        litbfContents.map(sectionObj => sectionObj.section)
-        : lhfContents.map(sectionObj => sectionObj.section);
+    const sections = isLitBFBook(book)
+        ? litbfContents.map(s => s.section)
+        : lhfContents.map(s => s.section);
 
     if (sections.length === 0) {
         const empty = document.createElement("div");
@@ -806,7 +771,9 @@ function showLitPSections(bookId) {
 
     currentScopeBookId = bookId;
     const sectionContainer = document.getElementById("sectionSearchContainer");
-    if (sectionContainer) sectionContainer.style.display = "none";
+    const sectionField = document.getElementById("sectionSearchField");
+    if (sectionContainer) sectionContainer.style.display = "block";
+    if (sectionField) sectionField.placeholder = `Hitady @${book.name}...`;
 
     const container = document.getElementById("content");
     container.innerHTML = "";
@@ -861,12 +828,11 @@ function showLitPSectionContent(bookId, sectionName) {
             <strong>${item.id}-</strong></span>${item.content.slice(3)}`;
         });
 
-    container.innerHTML = html.replace(
+    currentContentHtml = html.replace(
         /<br\s*\/?>/g,
         '<br><span style="margin-left:2rem; display:inline-block;"></span>'
-    );
-
-    currentContentHtml = html;
+    );;
+    renderContent(currentContentHtml);
     // Set up prev/next navigation for sections
     const sections = litpContents
         .map(sectionObj => sectionObj.section)
@@ -949,13 +915,13 @@ function showSubsectionContent(bookId, sectionName, subsectionIndex) {
     const sectionContainer = document.getElementById("sectionSearchContainer");
     if (sectionContainer) sectionContainer.style.display = "none";
 
-    currentContentHtml = isLHFBook(book) ?
-        `<h2 class="title">${sub.subsection}</h2>` + sub.content
+    currentContentHtml = isLHFBook(book)
+        ? `<h2 class="title">${sub.subsection}</h2>` + sub.content
         : sub.content;
     currentTitlesList = sectionObj.subsections.map((_, idx) => ({ id: idx }));
     currentTitleIndex = subsectionIndex;
 
-    renderContent(sub.content);
+    renderContent(currentContentHtml);
     updateBottomNav();
 }
 
