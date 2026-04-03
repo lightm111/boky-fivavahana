@@ -37,6 +37,10 @@ header {
   text-align: center;
 }
 
+.text-bold {
+  font-weight: 600;
+}
+
 .lit {
   text-align: justify;
 }
@@ -180,6 +184,30 @@ header {
 .item:active {
   transform: scale(0.98);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Accordion styles */
+.accordion-header {
+  background: #d3edff;
+  font-weight: bold;
+  padding: 8px;
+  margin-top: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.accordion-content {
+  margin-left: 0;
+}
+
+.accordion-song {
+  margin-left: 20px;
+}
+
+/* Toggle button styles */
+#floatingToggleBtn {
+  font-weight: 700;
+  font-size: 13px;
 }
 
 #lyrics {
@@ -408,28 +436,4 @@ header {
     width: 19px;
     height: 19px;
   }
-}
-
-/* Accordion styles */
-.accordion-header {
-  font-weight: bold;
-  background-color: #f0f0f0;
-  padding: 8px;
-  margin-top: 4px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.accordion-content {
-  margin-left: 0;
-}
-
-.accordion-song {
-  margin-left: 20px;
-}
-
-/* Toggle button styles */
-#floatingToggleBtn {
-  font-weight: 700;
-  font-size: 13px;
 }
