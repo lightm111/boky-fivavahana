@@ -504,9 +504,22 @@
             "Mba tohano amin-tsandry",
             "Mandrakizay."
           ]
+        },
+        {
+          "verse_number": 3,
+          "lines": [
+            "Raha haneno ny trompetra",
+            "Am-parany,",
+            "Hamoazanao ny maty",
+            "Am-pasany",
+            "Ry Mpamonjy aza afoinao",
+            "Izahay, fa mba akaro",
+            "Aminao anjaka any",
+            "An-danitra."
+          ]
         }
       ],
-      "has_amen": false,
+      "has_amen": true,
       "footnote": null
     },
     {
@@ -4379,9 +4392,22 @@
             "Mba hampody ny mania,",
             "Haleloia!"
           ]
+        },
+        {
+          "verse_number": 3,
+          "lines": [
+            "Fa ny nijaliany,",
+            "Haleloia!",
+            "Mahavonjy olona:",
+            "Haleloia!",
+            "Ka manjaka izy izao,",
+            "Haleloia!",
+            "Ao ambony lavitra ao.",
+            "Haleloia!"
+          ]
         }
       ],
-      "has_amen": false,
+      "has_amen": true,
       "footnote": null
     },
     {
@@ -6100,24 +6126,6 @@
             "Ampio, ry Kristy izahay",
             "Hiaraka Aminy."
           ]
-        },
-        {
-          "verse_number": 6,
-          "lines": [
-            "Rehefa vitanay ny ady aty,",
-            "Ka mba miala sasatra ary,",
-            "Faly izahay fa ao am-paradisa!",
-            "Haleloia!"
-          ]
-        },
-        {
-          "verse_number": 7,
-          "lines": [
-            "Fa kely sisa dia hiposaka",
-            "Ny Santanao mamirapiratra",
-            "Hiaraka Aminao Mpanjakanay.",
-            "Haleloia!"
-          ]
         }
       ],
       "has_amen": true,
@@ -6174,9 +6182,27 @@
             "Noho ny hoby re an-danitra:",
             "Haleloia!"
           ]
+        },
+        {
+          "verse_number": 6,
+          "lines": [
+            "Rehefa vitanay ny ady aty,",
+            "Ka mba miala sasatra ary,",
+            "Faly izahay fa ao am-paradisa!",
+            "Haleloia!"
+          ]
+        },
+        {
+          "verse_number": 7,
+          "lines": [
+            "Fa kely sisa dia hiposaka",
+            "Ny Santanao mamirapiratra",
+            "Hiaraka Aminao Mpanjakanay.",
+            "Haleloia!"
+          ]
         }
       ],
-      "has_amen": false,
+      "has_amen": true,
       "footnote": null
     },
     {
@@ -14132,15 +14158,6 @@
             "Mihainoa Tompo,",
             "Senton-janakao."
           ]
-        },
-        {
-          "verse_number": 7,
-          "lines": [
-            "Ka na mafy ny ady mamely aty,",
-            "He! ny Tompo no momba izay",
-            "Ta-handresy aty mba handova ary,",
-            "Sy hahazo ny lapan'ny Ray."
-          ]
         }
       ],
       "has_amen": true,
@@ -14206,9 +14223,18 @@
             "'Zay itaomany mafy dia mafy anao",
             "Fa mpandrobo mahay ny devoly."
           ]
+        },
+        {
+          "verse_number": 7,
+          "lines": [
+            "Ka na mafy ny ady mamely aty,",
+            "He! ny Tompo no momba izay",
+            "Ta-handresy aty mba handova ary,",
+            "Sy hahazo ny lapan'ny Ray."
+          ]
         }
       ],
-      "has_amen": false,
+      "has_amen": true,
       "footnote": null
     },
     {
@@ -15421,7 +15447,7 @@
           "lines": [
             "Noforana Ianao,",
             "Notrotroin'i Simeona,",
-            "Notompoi'i Ana koa:",
+            "Notompoin'i Ana koa:",
             "Mihainoa, Jesoa ô!"
           ]
         },
@@ -15935,12 +15961,7 @@
         {
           "verse_number": 9,
           "lines": [
-            "Ho an'ny Ray sy ny Zanaka: ary ny Fanahy Masina anie ny voninahitra."
-          ]
-        },
-        {
-          "verse_number": 10,
-          "lines": [
+            "Ho an'ny Ray sy ny Zanaka: ary ny Fanahy Masina anie ny voninahitra.",
             "Tahaka ny hatramin'ny taloha sy ankehitriny: ary mandrakariva ho mandrakizay doria."
           ]
         }
@@ -16696,6 +16717,62 @@
     },
     {
       "section": "NY ALAHADY SY NY ANDAVANANDRO",
+      "id": 272,
+      "title": "MISEHO ny mazava izao",
+      "intro": "Miambena ka mivavaha",
+      "headnote": "Talata maraina",
+      "verses": [
+        {
+          "verse_number": 1,
+          "lines": [
+            "MISEHO ny mazava izao,",
+            "Miantso Jesoa Tompontsika",
+            "Hanaraka azy Mpanome",
+            "Fiainana tanteraka."
+          ]
+        },
+        {
+          "verse_number": 2,
+          "lines": [
+            "Henoy izao ny feony;",
+            "Miarena, ry rendrehana,",
+            "Miambena ary mivavaha",
+            "Fa antomotra ny androko."
+          ]
+        },
+        {
+          "verse_number": 3,
+          "lines": [
+            "Mifona Aminao 'zahay",
+            "Mpanota izay mibebaka,",
+            "Ampaherezo izahay",
+            "Haharitra mivavaka."
+          ]
+        },
+        {
+          "verse_number": 4,
+          "lines": [
+            "Fohazy ny mpanomponao",
+            "Esory koa ny gadranay:",
+            "Diovy ny fanahinay",
+            "Ny sainay koa mba hazavao"
+          ]
+        },
+        {
+          "verse_number": 5,
+          "lines": [
+            "Deraina anie ny Ray Tsitoha",
+            "Deraina koa ny Zanaka",
+            "Sy Parakleto Masina",
+            "Dia Trinité Isaorana."
+          ]
+        }
+      ],
+      "has_amen": true,
+      "footnote": null
+    },
+    {
+      "section": "NY ALAHADY SY NY ANDAVANANDRO",
       "id": 273,
       "title": "RY Andriananahary ô",
       "intro": "Dia nisy hariva ary nisy maraina, andro fahatelo izany.",
@@ -16748,35 +16825,6 @@
         }
       ],
       "has_amen": true,
-      "footnote": null
-    },
-    {
-      "section": "NY ALAHADY SY NY ANDAVANANDRO",
-      "id": 272,
-      "title": "MISEHO ny mazava izao",
-      "intro": "Miambena ka mivavaha",
-      "headnote": "Talata maraina",
-      "verses": [
-        {
-          "verse_number": 1,
-          "lines": [
-            "MISEHO ny mazava izao,",
-            "Miantso Jesoa Tompontsika",
-            "Hanaraka azy Mpanome",
-            "Fiainana tanteraka."
-          ]
-        },
-        {
-          "verse_number": 2,
-          "lines": [
-            "Henoy izao ny feony;",
-            "Miarena, ry rendrehana,",
-            "Miambena ary mivavaha",
-            "Fa antomotra ny androko."
-          ]
-        }
-      ],
-      "has_amen": false,
       "footnote": null
     },
     {
@@ -22540,7 +22588,7 @@
           "lines": [
             "Tompom-piadanana",
             "Mpampandry fehizay",
-            "Ny sandriny ankayanana",
+            "Ny sandriny ankavanana",
             "Hampihavana indray",
             "Ka eran-tany anie",
             "Tsy hisy fandrafiana",
